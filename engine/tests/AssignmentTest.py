@@ -2,7 +2,7 @@ import unittest
 
 
 from compiler.Compiler import Compiler
-from compiler.models.Opcode import Opcode
+from compiler.bytecode.Opcode import Opcode
 
 
 
@@ -17,7 +17,7 @@ class AssignmentTest(unittest.TestCase):
         source = """x = 5"""
 
         opcodes_expected = [Opcode.LOAD_CONST, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals

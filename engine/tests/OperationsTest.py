@@ -17,7 +17,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 + 3"""
 
         opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -38,7 +38,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.BIN_ADD, 
             Opcode.STORE_GLOBAL
         ]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -52,7 +52,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 - 3"""
 
         opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -66,7 +66,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 * 3"""
 
         opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_MULT, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -80,7 +80,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 / 3"""
 
         opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_DIV, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -101,7 +101,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.BIN_ADD,     # 5 + (3 * 8)
             Opcode.STORE_GLOBAL # x
         ]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -121,7 +121,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.BIN_MULT,    # (5 + 3) * 8
             Opcode.STORE_GLOBAL # x
         ]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -143,7 +143,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.BIN_SUB,     # (12 / 4) - (2 * 3)
             Opcode.STORE_GLOBAL # x
         ]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
@@ -161,10 +161,34 @@ y = 10 - 4
             Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_GLOBAL, # x = 5 + 2
             Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_GLOBAL  # y = 10 - 4
         ]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"x": 0, "y": 1}
         globals_generated = self.compiler._globals
+
+        self.assertEqual(opcodes_expected, opcodes_generated)
+        self.assertEqual(globals_expected, globals_generated)
+
+
+    def test_binary_operation_with_call(self) -> None:
+        source = """
+xfassfasfasf = 5 + 2
+y = xfassfasfasf - 4
+"""
+        program = self.compiler.compile(source, True)
+
+        opcodes_expected = [
+            Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_GLOBAL,
+            Opcode.LOAD_GLOBAL, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_GLOBAL
+        ]
+        opcodes_generated = program.opcodes
+
+        globals_expected = {"xfassfasfasf": 0, "y": 1}
+        globals_generated = self.compiler._globals
+
+        print(f"Binary output: {program.binary}")
+
+        print(program)
 
         self.assertEqual(opcodes_expected, opcodes_generated)
         self.assertEqual(globals_expected, globals_generated)

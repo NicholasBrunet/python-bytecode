@@ -2,7 +2,7 @@ import unittest
 
 
 from compiler.Compiler import Compiler
-from compiler.models.Opcode import Opcode
+from compiler.bytecode.Opcode import Opcode
 
 
 
@@ -17,7 +17,7 @@ class ImportTest(unittest.TestCase):
         source = """import game"""
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"game": 0}
         globals_generated = self.compiler._globals
@@ -31,7 +31,7 @@ class ImportTest(unittest.TestCase):
         source = """import game, game.World"""
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL, Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"game": 0, "game.World": 1}
         globals_generated = self.compiler._globals
@@ -46,7 +46,7 @@ class ImportTest(unittest.TestCase):
 
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"w": 0}
         globals_generated = self.compiler._globals
@@ -62,7 +62,7 @@ class ImportTest(unittest.TestCase):
         self.compiler._available_globals.update({"game.utils.math": len(self.compiler._available_globals)})
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"game.utils.math": 0}
         globals_generated = self.compiler._globals
@@ -78,7 +78,7 @@ class ImportTest(unittest.TestCase):
         self.compiler._available_globals.update({"game.utils.math": len(self.compiler._available_globals)})
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"gmath": 0}
         globals_generated = self.compiler._globals
@@ -92,7 +92,7 @@ class ImportTest(unittest.TestCase):
         source = """from game import World"""
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"World": 0}
         globals_generated = self.compiler._globals
@@ -108,7 +108,7 @@ class ImportTest(unittest.TestCase):
         self.compiler._available_globals.update({"game.Player": len(self.compiler._available_globals)})
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL, Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"World": 0, "Player": 1}
         globals_generated = self.compiler._globals
@@ -122,7 +122,7 @@ class ImportTest(unittest.TestCase):
         source = """from game import World as w"""
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"w": 0}
         globals_generated = self.compiler._globals
@@ -138,7 +138,7 @@ class ImportTest(unittest.TestCase):
         self.compiler._available_globals.update({"game.entities.drones.Drone": len(self.compiler._available_globals)})
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"dro": 0}
         globals_generated = self.compiler._globals
@@ -159,7 +159,7 @@ from game import (
         self.compiler._available_globals.update({"game.Player": len(self.compiler._available_globals)})
 
         opcodes_expected = [Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL, Opcode.LOAD_GLOBAL, Opcode.STORE_GLOBAL]
-        opcodes_generated = self.compiler.compile(source, True)
+        opcodes_generated = self.compiler.compile(source, True).opcodes
 
         globals_expected = {"World": 0, "Player": 1}
         globals_generated = self.compiler._globals

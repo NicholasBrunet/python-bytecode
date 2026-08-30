@@ -3,8 +3,8 @@ from __future__ import annotations
 import ast
 import json
 
-from compiler.models.Instruction import Instruction
-from compiler.models.Opcode import Opcode
+from compiler.bytecode.Instruction import Instruction
+from compiler.bytecode.Program import Program
 
 class CompilerError(Exception):
     """
@@ -62,7 +62,7 @@ class Compiler():
         if verbose: print("Locals: " + json.dumps(self._locals, indent=4))
         if verbose: print(f"Instructions: {instructions}")
 
-        return [instruction.opcode for instruction in instructions]
+        return Program.of(instructions)
 
 
 
@@ -73,6 +73,9 @@ class Compiler():
 
         elif isinstance(statement, ast.Assign):
             return self._compile_assignment(statement)
+
+        elif isinstance(statement, ast.Name):
+            return self._compile_name(statement)
 
         elif isinstance(statement, ast.Constant):
             return self._compile_constant(statement)
@@ -115,12 +118,16 @@ class Compiler():
         instructions: list[Instruction] = list()
 
         instructions.extend(self._compile_statement(node.value))
-
-        for target in node.targets:
-            if isinstance(target, ast.Name):
-                instructions.extend(self.__store(target.id, self._flags["scope"]))
+        for target in node.targets: instructions.extend(self._compile_statement(target))
 
         return instructions
+
+
+    def _compile_name(self, node: ast.Name) -> list[Instruction]:
+        if isinstance(node.ctx, ast.Store): return self.__store(node.id, self._flags["scope"])
+        elif isinstance(node.ctx, ast.Load): return self.__load(node.id, self._flags["scope"])
+        else:
+            raise ValueError(f"Found unknown ast.Name.ctx attribute: {node.ctx}")
 
 
     def _compile_constant(self, node: ast.Constant) -> list[Instruction]:
