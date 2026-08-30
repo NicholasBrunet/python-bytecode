@@ -203,6 +203,7 @@ class Instruction:
     # Life Cycle Operations
     # ------------------------------------------------------------------
 
+
     @classmethod
     def pop_top(cls) -> Instruction:
         """
@@ -212,6 +213,7 @@ class Instruction:
         return cls(
             Opcode.POP_TOP
         )
+
 
     @classmethod
     def duplicate_top(cls) -> Instruction:
@@ -223,6 +225,14 @@ class Instruction:
             Opcode.DUO_TOP
         )
 
+
+    @classmethod
+    def swap(cls, stack_index: int) -> Instruction:
+        """
+        Swaps the value at the top of the stack with value at stack_index
+        """
+        return cls.of(Opcode.SWAP, stack_index)
+    
 
     @classmethod
     def halt(cls) -> Instruction:
@@ -244,21 +254,6 @@ class Instruction:
     def compare_op(cls, operator_code: int) -> Instruction:
         return cls.of(Opcode.COMPARE_OP, operator_code)
     
-    
-    # ------------------------------------------------------------------
-    # Jump Operations
-    # ------------------------------------------------------------------
-
-
-    @classmethod
-    def pop_jump_if_false(cls, target_index: int = 0) -> Instruction:
-        # We start with a placeholder target index (0) and patch it later
-        return cls.of(Opcode.POP_JUMP_IF_FALSE, target_index)
-
-
-    @classmethod
-    def jump_forward(cls, target_index: int = 0) -> Instruction:
-        return cls.of(Opcode.JUMP_FORWARD, target_index)
 
 
     # ------------------------------------------------------------------

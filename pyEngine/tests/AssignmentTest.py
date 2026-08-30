@@ -1,24 +1,24 @@
 import unittest
 
 
-from compiler.Compiler import Compiler
-from compiler.bytecode.Opcode import Opcode
-from compiler.bytecode.Program import Program
+from pyEngine.packages.pyCompiler.src.pycompiler.Compiler import Compiler
+from pyEngine.packages.pyCompiler.src.pycompiler.bytecode.Opcode import Opcode
+from pyEngine.packages.pyCompiler.src.pycompiler.bytecode.Program import Program
 
 
 
-class ComparisonTest(unittest.TestCase):
+class AssignmentTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.compiler = Compiler()
 
 
-    def test_assign_comparison(self) -> None:
+    def test_assign_constant(self) -> None:
 
-        source = """x = 1 == 2"""
+        source = """x = 5"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.STORE_GLOBAL]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -29,15 +29,15 @@ class ComparisonTest(unittest.TestCase):
         self.assertEqual(program, Program.of_binary(program.binary))
 
 
-    def test_assign_multiple_comparison(self) -> None:
+    def test_double_assignment(self) -> None:
 
-        source = """x = 1 == 2 == 3"""
+        source = """x = y = 5"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.COMPARE_OP, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.DUO_TOP, Opcode.STORE_GLOBAL, Opcode.STORE_GLOBAL]
         opcodes_generated = program.opcodes
 
-        globals_expected = {"x": 0}
+        globals_expected = {"x": 1, "y": 0}
         globals_generated = self.compiler._globals
 
         self.assertEqual(opcodes_expected, opcodes_generated)

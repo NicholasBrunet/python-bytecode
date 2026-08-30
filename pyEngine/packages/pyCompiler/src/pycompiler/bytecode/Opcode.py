@@ -21,14 +21,11 @@ class Opcode(Enum):
     # COMPARISON OPERATIONS
     COMPARE_OP = auto()  # Operand will represent the type of check (e.g., "==", "<")
 
-    # JUMP OPERATIONS
-    POP_JUMP_IF_FALSE = auto()  # Pops top of stack; jumps to target index if value is False
-    JUMP_FORWARD = auto()       # Unconditionally jumps forward to target index
-
 
     # LIFECYCLE OPERATIONS
     POP_TOP = auto()
     DUO_TOP = auto()
+    SWAP = auto()
     HALT = auto()
 
     # BINARY OPERATIONS
