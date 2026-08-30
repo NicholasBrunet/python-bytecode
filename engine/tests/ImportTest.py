@@ -2,7 +2,7 @@ import unittest
 
 
 from compiler.Compiler import Compiler
-from runtime.Opcode import Opcode
+from compiler.models.Opcode import Opcode
 
 
 

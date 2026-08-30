@@ -6,8 +6,8 @@ if __name__ == "__main__":
     
     suite = loader.discover(
         start_dir="tests", 
-        pattern="AssignmentTest.py",
-        top_level_dir="."
+        pattern="OperationsTest.py",
+        # top_level_dir="."
     )
     
     runner = GenericPrettyTestRunner()
