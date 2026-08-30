@@ -118,7 +118,9 @@ class Compiler():
         instructions: list[Instruction] = list()
 
         instructions.extend(self._compile_statement(node.value))
-        for target in node.targets: instructions.extend(self._compile_statement(target))
+        for i, target in enumerate(reversed(node.targets)):
+            if i < len(node.targets): instructions.append(Instruction.duplicate_top())
+            instructions.extend(self._compile_statement(target))
 
         return instructions
 

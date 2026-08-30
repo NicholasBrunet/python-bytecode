@@ -8,7 +8,6 @@ class Opcode(Enum):
     Represents an instruction understood by the game virtual machine.
     """
     def _generate_next_value_(name, start, count, last_values):
-        # 'count' starts at 0. If you want it to start at 1, use: count + 1
         return f"{count:09b}"
 
     # STORAGE OPERATIONS
@@ -25,6 +24,7 @@ class Opcode(Enum):
 
     # LIFECYCLE OPERATIONS
     POP_TOP = auto()
+    DUO_TOP = auto()
     HALT = auto()
 
     # BINARY OPERATIONS
@@ -35,7 +35,6 @@ class Opcode(Enum):
 
     def __str__(self) -> str:
         return self.name
-        # return self.binary
 
     @classmethod
     def of_binary(cls, binary_str: str) -> Opcode:

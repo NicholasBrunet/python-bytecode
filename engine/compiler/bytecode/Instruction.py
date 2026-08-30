@@ -213,6 +213,16 @@ class Instruction:
             Opcode.POP_TOP
         )
 
+    @classmethod
+    def duplicate_top(cls) -> Instruction:
+        """
+        Creates an instruction that duplicates the top stack value.
+        """
+
+        return cls(
+            Opcode.DUO_TOP
+        )
+
 
     @classmethod
     def halt(cls) -> Instruction:
