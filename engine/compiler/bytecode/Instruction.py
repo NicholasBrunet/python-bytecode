@@ -234,6 +234,33 @@ class Instruction:
             Opcode.HALT
         )
 
+
+    # ------------------------------------------------------------------
+    # Comparison Operations
+    # ------------------------------------------------------------------
+
+
+    @classmethod
+    def compare_op(cls, operator_code: int) -> Instruction:
+        return cls.of(Opcode.COMPARE_OP, operator_code)
+    
+    
+    # ------------------------------------------------------------------
+    # Jump Operations
+    # ------------------------------------------------------------------
+
+
+    @classmethod
+    def pop_jump_if_false(cls, target_index: int = 0) -> Instruction:
+        # We start with a placeholder target index (0) and patch it later
+        return cls.of(Opcode.POP_JUMP_IF_FALSE, target_index)
+
+
+    @classmethod
+    def jump_forward(cls, target_index: int = 0) -> Instruction:
+        return cls.of(Opcode.JUMP_FORWARD, target_index)
+
+
     # ------------------------------------------------------------------
     # Binary Operations
     # ------------------------------------------------------------------

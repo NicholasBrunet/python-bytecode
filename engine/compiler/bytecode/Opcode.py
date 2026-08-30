@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from enum import Enum, auto
 
-
 class Opcode(Enum):
     """
     Represents an instruction understood by the game virtual machine.
@@ -18,9 +17,14 @@ class Opcode(Enum):
 
     LOAD_LOCAL = auto()
     STORE_LOCAL = auto()
+    
+    # COMPARISON OPERATIONS
+    COMPARE_OP = auto()  # Operand will represent the type of check (e.g., "==", "<")
 
-    # CALL OPERATIONS
-    # CALL_API = BinaryId.next()
+    # JUMP OPERATIONS
+    POP_JUMP_IF_FALSE = auto()  # Pops top of stack; jumps to target index if value is False
+    JUMP_FORWARD = auto()       # Unconditionally jumps forward to target index
+
 
     # LIFECYCLE OPERATIONS
     POP_TOP = auto()

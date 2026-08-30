@@ -27,6 +27,15 @@ class Compiler():
             "scope": "module"
         }
 
+        self._comparison_map = {
+            ast.Lt: 0,
+            ast.LtE: 1,
+            ast.Eq: 2,
+            ast.NotEq: 3,
+            ast.Gt: 4,
+            ast.GtE: 5
+        }
+
     def compile(self, source: str, verbose: bool = False):
         
         try:
@@ -82,9 +91,15 @@ class Compiler():
         
         elif isinstance(statement, ast.BinOp):
             return self._compile_binary_operation(statement)
+        
+        elif isinstance(statement, ast.Compare):
+            return self._compile_comparison(statement)
+        
+        elif isinstance(statement, ast.cmpop):
+            return self._compile_comparison_operation(statement)
 
         else:
-            raise ValueError(f"Could not find compiler operation for: {statement}")
+            raise ValueError(f"Could not find compiler operation for: {statement.__class__}")
 
 
 
@@ -119,7 +134,7 @@ class Compiler():
 
         instructions.extend(self._compile_statement(node.value))
         for i, target in enumerate(reversed(node.targets)):
-            if i < len(node.targets): instructions.append(Instruction.duplicate_top())
+            if i < len(node.targets) - 1: instructions.append(Instruction.duplicate_top())
             instructions.extend(self._compile_statement(target))
 
         return instructions
@@ -136,21 +151,38 @@ class Compiler():
         return self.__load(node.value, "constant")
 
     
-    def _compile_binary_operation(self, node: ast.BinOp) -> list[Instruction]:
+    def _compile_binary_operation(self, node: ast.Compare) -> list[Instruction]:
 
         instructions: list[Instruction] = list()
 
         instructions.extend(self._compile_statement(node.left))
         instructions.extend(self._compile_statement(node.right))
-        instructions.extend(self.__operate(node.op))
+        instructions.extend(self.__operation(node.op))
 
         return instructions
 
+    
+    def _compile_comparison(self, node: ast.BinOp) -> list[Instruction]:
+
+        instructions: list[Instruction] = list()
+
+        # needs to be fixed!
+        for right in reversed(node.comparators): instructions.extend(self._compile_statement(right))
+        instructions.extend(self._compile_statement(node.left))
+        for operator in reversed(node.ops): instructions.extend(self._compile_statement(operator))
+
+        return instructions
+
+    def _compile_comparison_operation(self, node: ast.cmpop) -> list[Instruction]:
+        return [Instruction.compare_op(self._comparison_map[node.__class__])]
 
 
 
 
-    def __operate(self, operation: ast.operator) -> list[Instruction]:
+
+
+
+    def __operation(self, operation: ast.operator) -> list[Instruction]:
         match operation:
             case ast.Add(): return [Instruction.binary_add()]
             case ast.Sub(): return [Instruction.binary_subtract()]

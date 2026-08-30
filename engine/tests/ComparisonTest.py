@@ -7,18 +7,18 @@ from compiler.bytecode.Program import Program
 
 
 
-class AssignmentTest(unittest.TestCase):
+class ComparisonTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.compiler = Compiler()
 
 
-    def test_assign_constant(self) -> None:
+    def test_assign_comparison(self) -> None:
 
-        source = """x = 5"""
+        source = """x = 1 == 2"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.STORE_GLOBAL]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -29,15 +29,15 @@ class AssignmentTest(unittest.TestCase):
         self.assertEqual(program, Program.of_binary(program.binary))
 
 
-    def test_double_assignment(self) -> None:
+    def test_assign_multiple_comparison(self) -> None:
 
-        source = """x = y = 5"""
+        source = """x = 1 == 2 == 3"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.DUO_TOP, Opcode.STORE_GLOBAL, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.COMPARE_OP, Opcode.STORE_GLOBAL]
         opcodes_generated = program.opcodes
 
-        globals_expected = {"x": 1, "y": 0}
+        globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
 
         self.assertEqual(opcodes_expected, opcodes_generated)
