@@ -18,7 +18,7 @@ class Program:
 
     BYTECODE_VERSION = 1
 
-    instructions: tuple[Instruction, ..., ]
+    _instructions: tuple[Instruction, ..., ]
 
 
     @classmethod
@@ -30,11 +30,9 @@ class Program:
 
         return cls(immutable_instructions)
 
-    # @classmethod
-    # def of_binary(cls, binary: tuple[tuple[str, ...], ...]):
-    #     for binary_instruction in binary:
-    #         # first binary in tuple is binary of opcode
-    #         Opcode.
+    @classmethod
+    def of_binary(cls, binary: tuple[tuple[str, ...], ...]):
+        return cls.of([Instruction.of_binary(binary_instruction) for binary_instruction in binary])
 
 
     def instruction_at(
@@ -58,6 +56,10 @@ class Program:
         return self.instructions[
             index
         ]
+
+    @property
+    def instructions(self) -> list[Instruction]:
+        return self._instructions
 
     @property
     def opcodes(self) -> list[Opcode]:

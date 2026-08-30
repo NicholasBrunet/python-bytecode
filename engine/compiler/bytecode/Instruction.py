@@ -286,6 +286,7 @@ class Instruction:
             return self.__to_binary(255)
         return tuple(binary_list)
 
+    @classmethod
     def __from_binary(self, binary_operand: tuple[str, ...]) -> object | None:
 
         decoded_chars = []

@@ -60,7 +60,7 @@ class Compiler():
 
         if verbose: print("Globals: " + json.dumps(self._globals, indent=4))
         if verbose: print("Locals: " + json.dumps(self._locals, indent=4))
-        if verbose: print(f"Instructions: {instructions}")
+        if verbose: print(f"Instructions: {[instruction.__str__() for instruction in instructions]}")
 
         return Program.of(instructions)
 
@@ -183,8 +183,22 @@ class Compiler():
 
         instructions: list[Instruction] = list()
 
-        if scope == "module": instructions.append(Instruction.load_global(key))
+        if scope == "module": 
+            
+            if key not in self._globals:
+                if key in self._available_globals:
+                    self._globals[key] = len(self._globals)
+                else:
+                    raise NameError(f"Name '{key}' is not defined.")
+            
+            storage_index = self._globals[key]
+
+            instructions.append(Instruction.load_global(storage_index))
         elif scope == "constant": instructions.append(Instruction.load_const(key))
-        else: instructions.append(Instruction.load_local(key))
+        else: 
+            
+            if key not in self._locals: raise NameError(f"Local name '{key}' is not defined.")
+
+            instructions.append(Instruction.load_local(key))
 
         return instructions
