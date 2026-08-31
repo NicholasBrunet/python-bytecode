@@ -1,6 +1,6 @@
 from typing import Any, Callable
 from pycompiler.bytecode.Program import Program
-from .VirtualThread import VirtualThread
+from .VirtualThread import VirtualThread, ThreadStatus
 
 class VirtualMachine:
 
@@ -61,8 +61,8 @@ class VirtualMachine:
 
         # START OF THREAD EXECUTION
 
-        while not thread.halted:
-            if not thread.step(): break
+        while thread.runnable:
+            if thread.step() != ThreadStatus.RUNNABLE: break
 
         # END OF THREAD EXECUTION
 

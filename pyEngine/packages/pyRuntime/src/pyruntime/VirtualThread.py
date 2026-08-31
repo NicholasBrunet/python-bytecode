@@ -3,6 +3,13 @@ from typing import Callable, Any
 from pycompiler import Opcode, Instruction, Program
 from .StackFrame import StackFrame
 
+from enum import Enum, auto
+
+class ThreadStatus(Enum):
+    RUNNABLE = auto()
+    BLOCKED = auto()
+    COMPLETED = auto()
+
 class VirtualThread:
     def __init__(self, thread_id: int, program: Program, globals_dict: dict[str, Any], api_registry: dict[str, Callable]):
 
@@ -13,7 +20,8 @@ class VirtualThread:
         
         self._instruction_pointer = 0
         self._call_stack: list[StackFrame] = []
-        self._is_halted = False
+
+        self._status = ThreadStatus.RUNNABLE
 
         self.push_frame(return_address=-1)
     
@@ -24,18 +32,22 @@ class VirtualThread:
         return self._call_stack[-1]
 
     @property
-    def halted(self) -> bool:
-        return self._is_halted
+    def runnable(self) -> bool:
+        return self._status == ThreadStatus.RUNNABLE
     
 
     def push_frame(self, return_address: int) -> None:
         new_frame = StackFrame(return_address=return_address, globals_dict=self._globals)
         self._call_stack.append(new_frame)
 
-    def step(self) -> bool:
+    def step(self) -> ThreadStatus:
         """Executes a single Instruction. Returns False if halted or completed."""
-        if self._is_halted or self._instruction_pointer >= len(self._program.instructions) or not self._call_stack:
-            return False
+        if not self._call_stack: raise RuntimeError("Internal Error: VirtualThread should have attribute '_call_stack: list[StackFrame]'")
+        if not self.runnable: return self._status
+        if self._instruction_pointer >= len(self._program.instructions): 
+            self._status = ThreadStatus.COMPLETED
+            return self._status
+        
 
         instr: Instruction = self._program.instructions[self._instruction_pointer]
         self._instruction_pointer += 1
@@ -51,20 +63,20 @@ class VirtualThread:
             frame.push_stack(operand)
 
         elif opcode == Opcode.LOAD_GLOBAL:
-            if operand not in frame._globals:
+            if operand not in frame.globals:
                 raise NameError(f"Global name '{operand}' is not defined.")
-            frame.push_stack(frame._globals[operand])
+            frame.push_stack(frame.globals[operand])
 
         elif opcode == Opcode.STORE_GLOBAL:
-            frame._globals[operand] = frame.pop_stack()
+            frame.globals[operand] = frame.pop_stack()
 
         elif opcode == Opcode.LOAD_LOCAL:
-            if operand not in frame._locals:
+            if operand not in frame.locals:
                 raise NameError(f"Local name '{operand}' is not defined in this scope.")
-            frame.push_stack(frame._locals[operand])
+            frame.push_stack(frame.locals[operand])
 
         elif opcode == Opcode.STORE_LOCAL:
-            frame._locals[operand] = frame.pop_stack()
+            frame.locals[operand] = frame.pop_stack()
 
         # --------------------------------------------------------------
         # Binary Math Operations
@@ -119,9 +131,9 @@ class VirtualThread:
             frame.pop_stack()
 
         elif opcode == Opcode.HALT:
-            self._is_halted = True
-            return False
+            self._status = ThreadStatus.COMPLETED
+            return self._status
 
-        print(f"{instr}: {frame.dump()}")
+        print(f"{instr}: {frame}")
 
-        return True
+        return self._status
