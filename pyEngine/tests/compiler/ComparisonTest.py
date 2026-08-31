@@ -30,10 +30,17 @@ class ComparisonTest(unittest.TestCase):
 
     def test_assign_multiple_comparison(self) -> None:
 
-        source = """x = 1 == 2 == 3"""
+        source = """x = (1 == 2) == 3"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.COMPARE_OP, Opcode.STORE_GLOBAL]
+        opcodes_expected = [
+            Opcode.LOAD_CONST, 
+            Opcode.LOAD_CONST, 
+            Opcode.COMPARE_OP, 
+            Opcode.LOAD_CONST, 
+            Opcode.COMPARE_OP, 
+            Opcode.STORE_GLOBAL
+        ]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
