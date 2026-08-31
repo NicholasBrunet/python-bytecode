@@ -60,92 +60,67 @@ class Thread():
             return self.status
         
 
-        instr: Instruction = self._program._instructions[self._instruction_pointer]
+        instruction: Instruction = self._program._instructions[self._instruction_pointer]
         self._instruction_pointer += 1
 
-        frame = self.current_frame
-        opcode = instr.opcode
-        operand = instr.operand
-
-        # --------------------------------------------------------------
-        # Storage Operations
-        # --------------------------------------------------------------
-        if opcode == Opcode.LOAD_CONST:
-            frame.push_stack(operand)
-
-        elif opcode == Opcode.LOAD_GLOBAL:
-            if operand not in frame.globals:
-                raise NameError(f"Global name '{operand}' is not defined.")
-            frame.push_stack(frame.globals[operand])
-
-        elif opcode == Opcode.STORE_GLOBAL:
-            frame.globals[operand] = frame.pop_stack()
-
-        elif opcode == Opcode.LOAD_LOCAL:
-            if operand not in frame.locals:
-                raise NameError(f"Local name '{operand}' is not defined in this scope.")
-            frame.push_stack(frame.locals[operand])
-
-        elif opcode == Opcode.STORE_LOCAL:
-            frame.locals[operand] = frame.pop_stack()
-
-        # --------------------------------------------------------------
-        # Binary Math Operations
-        # --------------------------------------------------------------
-        elif opcode == Opcode.BIN_ADD:
-            right = frame.pop_stack()
-            left = frame.pop_stack()
-            frame.push_stack(left + right)
-
-        elif opcode == Opcode.BIN_SUB:
-            right = frame.pop_stack()
-            left = frame.pop_stack()
-            frame.push_stack(left - right)
-
-        elif opcode == Opcode.BIN_MULT:
-            right = frame.pop_stack()
-            left = frame.pop_stack()
-            frame.push_stack(left * right)
-
-        elif opcode == Opcode.BIN_DIV:
-            right = frame.pop_stack()
-            left = frame.pop_stack()
-            frame.push_stack(left / right)
-
-        # # --------------------------------------------------------------
-        # # Call Operations (Handling your ApiCall Dataclass)
-        # # --------------------------------------------------------------
-        # elif opcode == Opcode.CALL_API:
-        #     api_call: ApiCall = operand
-            
-        #     # Resolve the registered Python host function
-        #     if api_call.operation not in self.api_registry:
-        #         raise RuntimeError(f"Unknown Game API operation: {api_call.operation}")
-        #     func = self.api_registry[api_call.operation]
-
-        #     # Collect arguments off the stack in reverse order
-        #     args = []
-        #     for _ in range(api_call.argument_count):
-        #         args.insert(0, frame.pop())
-            
-        #     # Pop the receiver object (the entity performing the call, if applicable)
-        #     receiver = frame.pop()
-
-        #     # Invoke the underlying engine utility and push the result back
-        #     result = func(receiver, *args)
-        #     frame.push(result)
-
-        # --------------------------------------------------------------
-        # Life Cycle Operations
-        # --------------------------------------------------------------
-        elif opcode == Opcode.POP_TOP:
-            frame.pop_stack()
-
-        elif opcode == Opcode.HALT:
-            self._status = ThreadStatus.COMPLETED
-            return self.status
+        self._execute_instruction(instruction.opcode, instruction.operand, self.current_frame)
 
         return self.status
 
     def __str__(self) -> str:
         return f"{self._program._instructions[self._instruction_pointer - 1]}: {self.current_frame}"
+
+    def _execute_instruction(self, opcode: Opcode, operand: Any, stack_frame: StackFrame):
+
+        match opcode:
+            # --------------------------------------------------------------
+            # Storage Operations
+            # --------------------------------------------------------------
+            case Opcode.LOAD_CONST: stack_frame.push_stack(operand)
+            case Opcode.LOAD_GLOBAL: self.__load_global(operand, stack_frame)
+            case Opcode.STORE_GLOBAL: stack_frame.globals[operand] = stack_frame.pop_stack()
+            case Opcode.LOAD_LOCAL: self.__load_local(operand, stack_frame)
+            case Opcode.STORE_LOCAL: stack_frame.locals[operand] = stack_frame.pop_stack()
+            # --------------------------------------------------------------
+            # Binary Math Operations
+            # --------------------------------------------------------------
+            case Opcode.BIN_ADD: self.__bin_op(opcode, stack_frame)
+            case Opcode.BIN_SUB: self.__bin_op(opcode, stack_frame)
+            case Opcode.BIN_MULT: self.__bin_op(opcode, stack_frame)
+            case Opcode.BIN_DIV: self.__bin_op(opcode, stack_frame)
+            # --------------------------------------------------------------
+            # Life Cycle Operations
+            # --------------------------------------------------------------
+            case Opcode.POP_TOP: stack_frame.pop_stack()
+            case Opcode.HALT: self._status = ThreadStatus.COMPLETED
+            case _: raise RuntimeError("Could not match Opcode: {opcode}, to an operation.")
+
+
+    def __load_global(self, operand: Any, stack_frame: StackFrame):
+        if operand not in stack_frame.globals: raise NameError(f"Global name '{operand}' is not defined.")
+        stack_frame.push_stack(stack_frame.globals[operand])
+
+    def __load_local(self, operand: Any, stack_frame: StackFrame):
+        if operand not in stack_frame.locals: raise NameError(f"Local name '{operand}' is not defined in this scope.")
+        stack_frame.push_stack(stack_frame.locals[operand])
+
+    def __bin_op(self, opcode: Opcode, stack_frame: StackFrame):
+
+        match opcode:
+            case Opcode.BIN_ADD:
+                right = stack_frame.pop_stack()
+                left = stack_frame.pop_stack()
+                stack_frame.push_stack(left + right)
+            case Opcode.BIN_SUB:
+                right = stack_frame.pop_stack()
+                left = stack_frame.pop_stack()
+                stack_frame.push_stack(left - right)
+            case Opcode.BIN_MULT:
+                right = stack_frame.pop_stack()
+                left = stack_frame.pop_stack()
+                stack_frame.push_stack(left * right)
+            case Opcode.BIN_DIV:
+                right = stack_frame.pop_stack()
+                left = stack_frame.pop_stack()
+                stack_frame.push_stack(left / right)
+            case _: raise RuntimeError("Could not match Opcode: {opcode}, to a binary operation.")
