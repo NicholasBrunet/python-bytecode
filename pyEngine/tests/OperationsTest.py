@@ -1,9 +1,9 @@
 import unittest
 
 
-from pyEngine.packages.pyCompiler.src.pycompiler.Compiler import Compiler
-from pyEngine.packages.pyCompiler.src.pycompiler.bytecode.Opcode import Opcode
-from pyEngine.packages.pyCompiler.src.pycompiler.bytecode.Program import Program
+from pycompiler import Compiler
+from pycompiler import Opcode
+from pycompiler import Program
 
 
 

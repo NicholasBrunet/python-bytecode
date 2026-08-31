@@ -3,8 +3,8 @@ from __future__ import annotations
 import ast
 import json
 
-from pyEngine.packages.pyCompiler.src.pycompiler.bytecode.Instruction import Instruction
-from pyEngine.packages.pyCompiler.src.pycompiler.bytecode.Program import Program
+from ._bytecode.Instruction import Instruction
+from ._bytecode.Program import Program
 
 class CompilerError(Exception):
     """

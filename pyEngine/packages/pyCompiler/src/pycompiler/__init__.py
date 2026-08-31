@@ -1,7 +1,17 @@
-from .Compiler import Compiler
-from .bytecode.Program import Program
-from .bytecode.Instruction import Instruction
-from .bytecode.Opcode import Opcode
+"""
+Primary module for pyCompiler
+
+Contains:
+    Compiler
+    Program
+    Instruction
+    Opcode
+"""
+
+from ._Compiler import Compiler
+from ._bytecode.Program import Program
+from ._bytecode.Instruction import Instruction
+from ._bytecode.Opcode import Opcode
 
 __all__ = [
     "Compiler",
