@@ -1,7 +1,7 @@
 from typing import Callable, Any
 
 from pycompiler import Opcode, Instruction, Program
-from StackFrame import StackFrame
+from .StackFrame import StackFrame
 
 class VirtualThread:
     def __init__(self, thread_id: int, program: Program, globals_dict: dict[str, Any], api_registry: dict[str, Callable]):
@@ -23,6 +23,9 @@ class VirtualThread:
             raise RuntimeError(f"Thread {self._thread_id} has no active execution frames.")
         return self._call_stack[-1]
 
+    @property
+    def halted(self) -> bool:
+        return self._is_halted
     
 
     def push_frame(self, return_address: int) -> None:
@@ -118,5 +121,7 @@ class VirtualThread:
         elif opcode == Opcode.HALT:
             self._is_halted = True
             return False
+
+        print(f"{instr}: {frame.dump()}")
 
         return True

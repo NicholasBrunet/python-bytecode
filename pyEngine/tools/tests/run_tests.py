@@ -6,7 +6,7 @@ if __name__ == "__main__":
     
     suite = loader.discover(
         start_dir="tests", 
-        pattern="ComparisonTest.py",
+        pattern="ServerTest.py",
         # top_level_dir="."
     )
     

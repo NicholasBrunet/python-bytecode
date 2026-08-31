@@ -10,7 +10,7 @@ class Account():
     }
     __next_server_id__ = 0
 
-    def __init__(self, attributes: dict[str, Any]):
+    def __init__(self, attributes: dict[str, Any] = {}):
 
         self._server_id: int = Account.__next_server_id__
         self._attributes: dict[str, Any] = dict(self.__default_attributes__) | attributes

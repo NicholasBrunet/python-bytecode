@@ -15,10 +15,10 @@ class Compiler():
 
     def __init__(self):
 
-        self._available_globals: dict[str, str] = {
-            "game.World": "World",
-            "game": "game"
-        }
+        # self._available_globals: dict[str, str] = {
+        #     "game.World": "World",
+        #     "game": "game"
+        # }
 
         self._globals: dict[str, str] = {}
         self._locals: dict[str, str] = {}
@@ -115,15 +115,16 @@ class Compiler():
         instructions: list[Instruction] = list()
 
         for alias in node.names:
+            
             key = module + alias.name
-            if key in self._available_globals: # RULE: can only import a global if in available globals
+            # if key in self._available_globals: # RULE: can only import a global if in available globals
 
-                name = alias.asname if alias.asname else alias.name
-                instructions.extend(self.__load(key, self._flags["scope"]))
-                instructions.extend(self.__store(name, self._flags["scope"]))
+            name = alias.asname if alias.asname else alias.name
+            instructions.extend(self.__load(key, self._flags["scope"]))
+            instructions.extend(self.__store(name, self._flags["scope"]))
 
-            else:
-                raise ValueError(f"Denied import: {key}, not in available globals.")
+            # else:
+            #     raise ValueError(f"Denied import: {key}, not in available globals.")
 
         return instructions
     
