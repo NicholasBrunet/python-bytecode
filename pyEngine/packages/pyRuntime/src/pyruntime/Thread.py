@@ -1,39 +1,51 @@
+import json
 from typing import Callable, Any
+from dataclasses import dataclass
 
 from pycompiler import Opcode, Instruction, Program
 from .StackFrame import StackFrame
+from .ThreadStatus import ThreadStatus
 
-from enum import Enum, auto
-
-class ThreadStatus(Enum):
-    RUNNABLE = auto()
-    BLOCKED = auto()
-    COMPLETED = auto()
-
-class VirtualThread:
+class Thread():
     def __init__(self, thread_id: int, program: Program, globals_dict: dict[str, Any], api_registry: dict[str, Callable]):
 
-        self._thread_id = thread_id
-        self._program = program
-        self._globals = globals_dict
-        self._api_registry = api_registry
+        self._thread_id: int = thread_id
+        self._program: Program = program
+        self._globals: dict[str, Any] = globals_dict
+        self._api_registry: dict[str, Callable] = api_registry
         
-        self._instruction_pointer = 0
+        self._instruction_pointer: int = 0
         self._call_stack: list[StackFrame] = []
 
-        self._status = ThreadStatus.RUNNABLE
+        self._status: ThreadStatus = ThreadStatus.RUNNABLE
 
         self.push_frame(return_address=-1)
     
+    @property
+    def id(self) -> int:
+        return self._thread_id
+        
     @property
     def current_frame(self) -> StackFrame:
         if not self._call_stack:
             raise RuntimeError(f"Thread {self._thread_id} has no active execution frames.")
         return self._call_stack[-1]
+    
+    @property
+    def call_stack(self) -> list[StackFrame]:
+        return self._call_stack
 
     @property
     def runnable(self) -> bool:
         return self._status == ThreadStatus.RUNNABLE
+    
+    @property
+    def status(self) -> ThreadStatus:
+        return self._status
+    
+    @property
+    def globals(self) -> dict[str, Any]:
+        return self._globals
     
 
     def push_frame(self, return_address: int) -> None:
@@ -43,13 +55,13 @@ class VirtualThread:
     def step(self) -> ThreadStatus:
         """Executes a single Instruction. Returns False if halted or completed."""
         if not self._call_stack: raise RuntimeError("Internal Error: VirtualThread should have attribute '_call_stack: list[StackFrame]'")
-        if not self.runnable: return self._status
+        if not self.runnable: return self.status
         if self._instruction_pointer >= len(self._program.instructions): 
             self._status = ThreadStatus.COMPLETED
-            return self._status
+            return self.status
         
 
-        instr: Instruction = self._program.instructions[self._instruction_pointer]
+        instr: Instruction = self._program._instructions[self._instruction_pointer]
         self._instruction_pointer += 1
 
         frame = self.current_frame
@@ -132,8 +144,9 @@ class VirtualThread:
 
         elif opcode == Opcode.HALT:
             self._status = ThreadStatus.COMPLETED
-            return self._status
+            return self.status
 
-        print(f"{instr}: {frame}")
+        return self.status
 
-        return self._status
+    def __str__(self) -> str:
+        return f"{self._program._instructions[self._instruction_pointer - 1]}: {self.current_frame}"

@@ -1,6 +1,8 @@
-from typing import Any, Callable
+from typing import Any, Callable, overload
 from pycompiler.bytecode.Program import Program
-from .VirtualThread import VirtualThread, ThreadStatus
+from .Thread import Thread
+from .ThreadStatus import ThreadStatus
+from .ThreadPromise import ThreadPromise
 
 class VirtualMachine:
 
@@ -11,8 +13,11 @@ class VirtualMachine:
         self._virtual_machine_id = VirtualMachine.__next_virtual_machine_id__
         self._programs: dict[int, Program] = {}
         self._programs_active: dict[int, int] = {} 
-        self._virtual_threads: dict[int, VirtualThread] = {}
+        self._virtual_threads: dict[int, Thread] = {}
+        self._thread_promises: dict[int, ThreadPromise] = {}
         self._api_registry = api_registry or {}
+
+        self._index_thread_program: dict[int, int] = {} # thread id to program id
         
         self._next_program_id = 0
         self._next_thread_id = 0
@@ -23,10 +28,25 @@ class VirtualMachine:
     def id(self) -> int:
         return self._virtual_machine_id
 
-    def program_id_of(self, program: Program) -> int | None:
+
+
+    @overload
+    def program_id_of(self, thread: Thread) -> int | None: ...
+    def _program_id_from_thread(self, thread: Thread) -> int | None:
+        return self._index_thread_program.get(thread.id)
+
+    @overload
+    def program_id_of(self, program: Program) -> int | None: ...
+    def _program_id_from_program(self, program: Program) -> int | None:
         for id, stored_program in self._programs.items():
             if stored_program == program: return id
         return None
+
+    def program_id_of(self, *args):
+        if isinstance(args[0], Thread): return self._program_id_from_thread(*args)
+        elif isinstance(args[0], Program): return self._program_id_from_program(*args)
+
+
 
     def store_program(self, program: Program) -> int:
         program_id = self._next_program_id
@@ -35,7 +55,7 @@ class VirtualMachine:
         self._programs[program_id] = program
         return program_id
 
-    def execute_program(self, program_id: int, initial_globals: dict[str, Any] | None = None) -> int:
+    def execute_program(self, program_id: int, initial_globals: dict[str, Any] | None = None) -> ThreadPromise:
 
         if program_id not in self._programs:
             raise KeyError(f"Cannot execute program with id: {program_id}, not found in VM program storage.")
@@ -49,23 +69,45 @@ class VirtualMachine:
         if program_id in self._programs_active:
             raise ValueError(f"Program with id: {program_id} is being executed by virtual thread with id: {thread_id}")
 
-        thread = VirtualThread(
+        thread = Thread(
             thread_id=thread_id,
             program=program,
             globals_dict=globals_dict,
             api_registry=self._api_registry
         )
 
-        self._virtual_threads[thread_id] = thread
+        thread_promise = ThreadPromise.of(thread)
+
         self._programs_active[program_id] = thread_id
+        self._virtual_threads[thread_id] = thread
+        self._thread_promises[thread_id] = thread_promise
+        self._index_thread_program[thread_id] = program_id
 
-        # START OF THREAD EXECUTION
+        return thread_promise
 
-        while thread.runnable:
-            if thread.step() != ThreadStatus.RUNNABLE: break
+    def tick(self) -> bool:
 
-        # END OF THREAD EXECUTION
+        thread_ids = list(self._virtual_threads.keys())
+        
+        for thread_id in thread_ids:
 
-        self._programs_active.pop(program_id)
+            thread = self._virtual_threads.get(thread_id)
 
-        return thread_id
+            if not thread: continue
+            if thread.runnable: status = thread.step()
+            else: status = thread.status
+
+            if status == ThreadStatus.COMPLETED:
+
+                program_id = self.program_id_of(thread)
+                thread_promise = self._thread_promises.get(thread_id)
+
+                if program_id != None: self._programs_active.pop(program_id)
+                if thread_promise != None: 
+                    thread_promise.fulfill()
+                    self._thread_promises.pop(thread_id)
+
+                self._virtual_threads.pop(thread_id)
+                self._index_thread_program.pop(thread_id)
+
+        return len(self._virtual_threads) > 0

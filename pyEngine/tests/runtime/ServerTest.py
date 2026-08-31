@@ -1,8 +1,8 @@
 import unittest
 
 # from pycompiler import Opcode
-from pycompiler import Compiler, Opcode
-from pyruntime import Account, Server, VirtualMachine
+from pycompiler import Compiler, Opcode, Program
+from pyruntime import Account, Server, VirtualMachine, ThreadPromise
 
 class ServerTest(unittest.TestCase):
 
@@ -30,8 +30,6 @@ y = x - 5
         program = self.compile(source, True)
         program_id = self.vm.store_program(program)
 
-
-
         opcodes_expected = [
             Opcode.LOAD_CONST, 
             Opcode.STORE_GLOBAL, 
@@ -41,8 +39,13 @@ y = x - 5
             Opcode.STORE_GLOBAL
         ]
         self.assertEqual(opcodes_expected, program.opcodes)
+        self.assertEqual(program, Program.of_binary(program.binary))
 
-        thread_id = self.vm.execute_program(program_id)
+        thread_promise = self.vm.execute_program(program_id)
+
+        while self.vm.tick():
+            # pass
+            print(thread_promise.thread)
 
 if __name__ == "__main__":
     unittest.main()
