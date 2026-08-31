@@ -6,9 +6,9 @@ def _compile_assignment(node: ast.Assign, flags: dict[str, Any]) -> list[Instruc
 
     instructions: list[Instruction] = list()
 
-    instructions.extend(flags["compile"](node.value))
+    instructions.extend(flags["callback"](node.value))
     for i, target in enumerate(reversed(node.targets)):
         if i < len(node.targets) - 1: instructions.append(Instruction.duplicate_top())
-        instructions.extend(flags["compile"](target))
+        instructions.extend(flags["callback"](target))
 
     return instructions

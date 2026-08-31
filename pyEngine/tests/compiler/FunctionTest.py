@@ -4,6 +4,8 @@ from pycompiler import Compiler
 from pycompiler import Opcode
 from pycompiler import Program
 
+import dis
+
 
 
 class FunctionTest(unittest.TestCase):
@@ -14,9 +16,13 @@ class FunctionTest(unittest.TestCase):
 
     def test_assign_comparison(self) -> None:
 
+#         source = """
+# def add(a: int, b: int) -> int:
+#     return a + b
+# """
         source = """
-def add(a: int, b: int) -> int:
-    return a + b
+def func(a):
+    return a
 """
         program = self.compiler.compile(source, True)
 
@@ -32,6 +38,8 @@ def add(a: int, b: int) -> int:
 
         globals_expected = {"x": 0}
         globals_generated = self.compiler._globals
+
+        print(dis.dis(source))
 
         # self.assertEqual(opcodes_expected, opcodes_generated)
         # self.assertEqual(globals_expected, globals_generated)

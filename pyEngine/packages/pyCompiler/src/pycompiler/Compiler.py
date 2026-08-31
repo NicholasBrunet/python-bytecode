@@ -3,25 +3,28 @@ from __future__ import annotations
 import ast
 import json
 
-from .bytecode.Instruction import Instruction
-from .bytecode.Program import Program
-from .compiler import CompilerError, _assign, _import, _name, _constant, _operator, _bin_op, _compare
+from .bytecode import (
+    Instruction,
+    Program
+)
+from .compiler import (
+    CompilerError, Scope,
+    _assign, _import, _name, _constant, _operator, 
+    _bin_op, _compare, _func_def
+)
 
 class Compiler():
 
     def __init__(self):
 
-        self._available_globals: dict[str, str] = {}# = {
-        #     "game.World": "World",
-        #     "game": "game"
-        # }
-
         self._globals: dict[str, str] = {}
-        self._locals: dict[str, str] = {}
+        """
+        Globals passed into module scope, this allows
+        compiler to block certain imports of unauthorized
+        globals.
+        """
 
-        self._flags: dict [str, str] = {
-            "scope": "module"
-        }
+        self._scope: Scope = Scope(Scope.Type.MODULE, self._globals)
 
     def compile(self, source: str, verbose: bool = False):
         
@@ -66,24 +69,21 @@ SyntaxError: {e.msg}
 
     def _compile_statement(self, statement: ast.stmt) -> list[Instruction]:
 
-        if isinstance(statement, ast.Import | ast.ImportFrom):
+        if isinstance(statement, ast.Constant):
+            return _constant(statement, {
+                "load": self._scope.load_constant
+            })
+    
+        elif isinstance(statement, ast.Import | ast.ImportFrom):
             return _import(statement, {
-                "scope": self._flags["scope"],
-                "load": self.__load,
-                "store": self.__store
+                "load": self._scope.load_name,
+                "store": self._scope.store_name,
             })
 
         elif isinstance(statement, ast.Name):
             return _name(statement, {
-                "scope": self._flags["scope"],
-                "load": self.__load,
-                "store": self.__store
-            })
-
-        elif isinstance(statement, ast.Constant):
-            return _constant(statement, {
-                "scope": "constant",
-                "load": self.__load
+                "load": self._scope.load_name,
+                "store": self._scope.store_name,
             })
         
         elif isinstance(statement, ast.cmpop):
@@ -100,65 +100,26 @@ SyntaxError: {e.msg}
         
         elif isinstance(statement, ast.Assign):
             return _assign(statement, {
-                "compile": self._compile_statement
+                "callback": self._compile_statement
             })
         
         elif isinstance(statement, ast.BinOp):
             return _bin_op(statement, {
-                "compile": self._compile_statement
+                "callback": self._compile_statement
             })
         
         elif isinstance(statement, ast.Compare):
             return _compare(statement, {
-                "compile": self._compile_statement
+                "callback": self._compile_statement
+            })
+        
+        elif isinstance(statement, ast.FunctionDef):
+            _function_scope = self._scope.new(Scope.Type.FUNCTION)
+            return _func_def(statement, {
+                "callback": self._compile_statement,
+                "load": _function_scope.load_name,
+                "store": _function_scope.store_name
             })
 
         else:
             raise CompilerError(f"Could not find compiler operation for: {statement.__class__}")
-
-
-
-    def __store(self, key: object, scope: str) -> list[Instruction]:
-
-        instructions: list[Instruction] = list()
-
-        if scope == "module":
-
-            if key not in self._globals: self._globals[key] = len(self._globals)
-            storage_index = self._globals[key]
-
-            instructions.append(Instruction.store_global(storage_index))
-
-        else:
-
-            if key not in self._locals: self._locals[key] = len(self._locals)
-            storage_index = self._locals[key]
-
-            instructions.append(Instruction.store_local(storage_index))
-
-        return instructions
-
-
-    def __load(self, key: object, scope: str) -> list[Instruction]:
-
-        instructions: list[Instruction] = list()
-
-        if scope == "module": 
-            
-            if key not in self._globals:
-                if key in self._available_globals:
-                    self._globals[key] = len(self._globals)
-                else:
-                    raise NameError(f"Name '{key}' is not defined.")
-            
-            storage_index = self._globals[key]
-
-            instructions.append(Instruction.load_global(storage_index))
-        elif scope == "constant": instructions.append(Instruction.load_const(key))
-        else: 
-            
-            if key not in self._locals: raise NameError(f"Local name '{key}' is not defined.")
-
-            instructions.append(Instruction.load_local(key))
-
-        return instructions

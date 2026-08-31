@@ -1,85 +1,9 @@
 from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import Any
 from types import NoneType
 
 from .Opcode import Opcode
-
-
-# @dataclass(
-#     frozen=True,
-#     slots=True,
-# )
-# class ApiCall:
-#     """
-#     Describes a game API invocation performed by CALL_API.
-
-#     Attributes:
-#         operation:
-#             Runtime operation identifier.
-
-#         argument_count:
-#             Number of arguments supplied to the operation, excluding
-#             the receiver object.
-#     """
-
-#     operation: str
-#     argument_count: int
-
-
-#     def to_dict(self) -> dict[str, Any]:
-#         """
-#         Serializes this API call into a language-neutral representation.
-#         """
-
-#         return {
-#             "operation": self.operation,
-#             "argument_count": self.argument_count,
-#         }
-
-
-#     @classmethod
-#     def from_dict(
-#         cls,
-#         data: dict[str, Any],
-#     ) -> "ApiCall":
-#         """
-#         Creates an API call from its serialized representation.
-#         """
-
-#         operation = data.get(
-#             "operation"
-#         )
-
-#         argument_count = data.get(
-#             "argument_count"
-#         )
-
-#         if not isinstance(
-#             operation,
-#             str,
-#         ):
-#             raise ValueError(
-#                 "ApiCall operation must be a string"
-#             )
-
-#         if not isinstance(
-#             argument_count,
-#             int,
-#         ):
-#             raise ValueError(
-#                 "ApiCall argument_count must be an integer"
-#             )
-
-#         if argument_count < 0:
-#             raise ValueError(
-#                 "ApiCall argument_count cannot be negative"
-#             )
-
-#         return cls(
-#             operation=operation,
-#             argument_count=argument_count,
-#       )
 
 
 @dataclass(
@@ -103,203 +27,78 @@ class Instruction:
     # ------------------------------------------------------------------
 
     @classmethod
-    def load_const(
-        cls,
-        value: object,
-    ) -> Instruction:
-        """
-        Creates an instruction that loads a constant onto the stack.
-        """
-
-        return cls(
-            Opcode.LOAD_CONST,
-            value,
-        )
+    def load_const(cls, value: object) -> Instruction:
+        return cls(Opcode.LOAD_CONST, value)
 
 
     @classmethod
-    def load_global(
-        cls,
-        name: str,
-    ) -> Instruction:
-        """
-        Creates an instruction that loads a runtime global onto the stack.
-        """
-
-        return cls(
-            Opcode.LOAD_GLOBAL,
-            name,
-        )
+    def load_name(cls, storage_index: int) -> Instruction:
+        return cls(Opcode.LOAD_NAME, storage_index)
 
 
     @classmethod
-    def store_global(
-        cls,
-        name: str,
-    ) -> Instruction:
-        """
-        Creates an instruction that stores the top stack value globally.
-        """
-
-        return cls(
-            Opcode.STORE_GLOBAL,
-            name,
-        )
-
-    @classmethod
-    def load_local(
-        cls,
-        name: str,
-    ) -> Instruction:
-        """
-        Creates an instruction that loads a local variable onto the stack.
-        """
-
-        return cls(
-            Opcode.LOAD_LOCAL,
-            name,
-        )
-
-
-    @classmethod
-    def store_local(
-        cls,
-        name: str,
-    ) -> Instruction:
-        """
-        Creates an instruction that stores the top stack value locally.
-        """
-
-        return cls(
-            Opcode.STORE_LOCAL,
-            name,
-        )
-
-
-    # ------------------------------------------------------------------
-    # Call Operations
-    # ------------------------------------------------------------------
-
-    # @classmethod
-    # def call_api(
-    #     cls,
-    #     operation: str,
-    #     argument_count: int = 0,
-    # ) -> Instruction:
-    #     """
-    #     Creates an instruction that invokes a game API operation.
-    #     """
-
-    #     return cls(
-    #         Opcode.CALL_API,
-    #         ApiCall(
-    #             operation=operation,
-    #             argument_count=argument_count,
-    #         ),
-    #     )
-
+    def store_name(cls, storage_index: int) -> Instruction:
+        return cls(Opcode.STORE_NAME, storage_index)
 
     # ------------------------------------------------------------------
     # Life Cycle Operations
     # ------------------------------------------------------------------
 
+    @classmethod
+    def make_function(cls) -> Instruction:
+        return cls(Opcode.MAKE_FUNCTION)
+    
+    @classmethod
+    def call_function(cls) -> Instruction:
+        return cls(Opcode.CALL_FUNCTION)
+    
+    @classmethod
+    def return_value(cls) -> Instruction:
+        return cls(Opcode.RETURN_VALUE)
 
     @classmethod
     def pop_top(cls) -> Instruction:
-        """
-        Creates an instruction that discards the top stack value.
-        """
-
-        return cls(
-            Opcode.POP_TOP
-        )
-
+        return cls(Opcode.POP_TOP)
 
     @classmethod
     def duplicate_top(cls) -> Instruction:
-        """
-        Creates an instruction that duplicates the top stack value.
-        """
-
-        return cls(
-            Opcode.DUO_TOP
-        )
-
+        return cls(Opcode.DUO_TOP)
 
     @classmethod
     def swap(cls, stack_index: int) -> Instruction:
-        """
-        Swaps the value at the top of the stack with value at stack_index
-        """
         return cls.of(Opcode.SWAP, stack_index)
     
-
     @classmethod
     def halt(cls) -> Instruction:
-        """
-        Creates an instruction that stops execution.
-        """
-
-        return cls(
-            Opcode.HALT
-        )
-
+        return cls(Opcode.HALT)
 
     # ------------------------------------------------------------------
     # Comparison Operations
     # ------------------------------------------------------------------
 
-
     @classmethod
     def compare_op(cls, operator_code: int) -> Instruction:
         return cls.of(Opcode.COMPARE_OP, operator_code)
     
-
-
     # ------------------------------------------------------------------
     # Binary Operations
     # ------------------------------------------------------------------
 
     @classmethod
     def binary_add(cls) -> Instruction:
-        """
-        Creates an instruction that adds stack[-2] and stack[-1]
-        """
-
-        return cls(
-            Opcode.BIN_ADD
-        )
+        return cls(Opcode.BIN_ADD)
     
     @classmethod
     def binary_subtract(cls) -> Instruction:
-        """
-        Creates an instruction that subtracts stack[-1] from stack[-2]
-        """
-
-        return cls(
-            Opcode.BIN_SUB
-        )
+        return cls(Opcode.BIN_SUB)
     
     @classmethod
     def binary_multiply(cls) -> Instruction:
-        """
-        Creates an instruction that multiplies stack[-2] by stack[-1]
-        """
-
-        return cls(
-            Opcode.BIN_MULT
-        )
+        return cls(Opcode.BIN_MULT)
     
     @classmethod
     def binary_divide(cls) -> Instruction:
-        """
-        Creates an instruction that divides stack[-2] by stack[-1]
-        """
-
-        return cls(
-            Opcode.BIN_DIV
-        )
-
+        return cls(Opcode.BIN_DIV)
 
     # ------------------------------------------------------------------
     # Class Properties
@@ -340,9 +139,6 @@ class Instruction:
 
     @classmethod
     def of(cls, opcode: Opcode, operand: object | None = None) -> Instruction:
-        """
-        Creates a program from the provided instructions.
-        """
         return cls(opcode, operand)
 
     @classmethod

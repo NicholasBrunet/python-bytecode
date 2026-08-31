@@ -15,9 +15,9 @@ def _compile_import(node: ast.Import | ast.ImportFrom, flags: dict[str, Any]) ->
 
     for alias in node.names:
         
-        key = module + alias.name
-        name = alias.asname if alias.asname else alias.name
-        instructions.extend(flags["load"](key, flags["scope"]))
-        instructions.extend(flags["store"](name, flags["scope"]))
+        import_key_identifier = module + alias.name
+        identifier = alias.asname if alias.asname else alias.name
+        instructions.extend(flags["load"](import_key_identifier))
+        instructions.extend(flags["store"](identifier))
 
     return instructions

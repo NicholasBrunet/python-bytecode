@@ -12,17 +12,24 @@ class Opcode(Enum):
     # STORAGE OPERATIONS
     LOAD_CONST = auto()
 
-    LOAD_GLOBAL = auto()
-    STORE_GLOBAL = auto()
+    LOAD_NAME = auto()
+    STORE_NAME = auto()
+    """
+    Store the value at the top of stack with a given identifier \n
+    e.g. "x = 5"
 
-    LOAD_LOCAL = auto()
-    STORE_LOCAL = auto()
+    However the bytecode should emit identifiers as storage indexes
+    """
     
     # COMPARISON OPERATIONS
     COMPARE_OP = auto()  # Operand will represent the type of check (e.g., "==", "<")
 
 
     # LIFECYCLE OPERATIONS
+    MAKE_FUNCTION = auto()
+    CALL_FUNCTION = auto()
+    RETURN_VALUE = auto()
+
     POP_TOP = auto()
     DUO_TOP = auto()
     SWAP = auto()

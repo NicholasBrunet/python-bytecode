@@ -18,8 +18,8 @@ the result of another operation encapsulated by parenthesis.
 
     instructions: list[Instruction] = list()
 
-    instructions.extend(flags["compile"](node.left))
-    instructions.extend(flags["compile"](node.comparators[0]))
-    instructions.extend(flags["compile"](node.ops[0]))
+    instructions.extend(flags["callback"](node.left))
+    instructions.extend(flags["callback"](node.comparators[0]))
+    instructions.extend(flags["callback"](node.ops[0]))
 
     return instructions

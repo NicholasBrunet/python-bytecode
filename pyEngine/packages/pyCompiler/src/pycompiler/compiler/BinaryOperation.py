@@ -7,8 +7,8 @@ def _compile_binary_operation(node: ast.Compare, flags: dict[str, Any]) -> list[
 
     instructions: list[Instruction] = list()
 
-    instructions.extend(flags["compile"](node.left))
-    instructions.extend(flags["compile"](node.right))
+    instructions.extend(flags["callback"](node.left))
+    instructions.extend(flags["callback"](node.right))
 
     match node.op:
         case ast.Add(): instructions.append(Instruction.binary_add())

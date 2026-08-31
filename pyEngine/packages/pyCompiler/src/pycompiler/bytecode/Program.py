@@ -35,27 +35,15 @@ class Program:
         return cls.of([Instruction.of_binary(binary_instruction) for binary_instruction in binary])
 
 
-    def instruction_at(
-        self,
-        index: int,
-    ) -> Instruction | None:
+    def instruction_at(self, index: int) -> Instruction | None:
         """
         Returns the instruction at the requested index.
 
         Returns None when the index is outside the program.
         """
 
-        if (
-            index < 0
-            or index >= len(
-                self.instructions
-            )
-        ):
-            return None
-
-        return self.instructions[
-            index
-        ]
+        if (index < 0 or index >= len(self.instructions)): return None
+        return self.instructions[index]
 
     @property
     def instructions(self) -> list[Instruction]:
