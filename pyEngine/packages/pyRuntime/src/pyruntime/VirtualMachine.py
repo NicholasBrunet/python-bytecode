@@ -1,12 +1,14 @@
 from typing import Any, Callable
-from pycompiler import Program
+from pycompiler.bytecode.Program import Program
 from pyruntime.VirtualThread import VirtualThread
 
 class VirtualMachine:
 
-    def __init__(self, client_id: int, api_registry: dict[str, Callable] | None = None):
+    __next_virtual_machine_id__ = 0
 
-        self._client_id = client_id
+    def __init__(self, api_registry: dict[str, Callable] | None = None):
+
+        self._virtual_machine_id = VirtualMachine.__next_virtual_machine_id__
         self._programs: dict[int, Program] = {}
         self._programs_active: dict[int, int] = {} 
         self._virtual_threads: dict[int, VirtualThread] = {}
@@ -14,6 +16,8 @@ class VirtualMachine:
         
         self._next_program_id = 0
         self._next_thread_id = 0
+
+        VirtualMachine.__next_virtual_machine_id__ += 1
 
     def store_program(self, program: Program) -> int:
         program_id = self._next_program_id

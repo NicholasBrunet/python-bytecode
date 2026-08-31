@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyruntime"
+version = "0.1.0"
+description = "Runtime component of pyEngine"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pycompiler @ file:///home/nick/code/python-bytecode/pyEngine/packages/pyCompiler"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyruntime"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
