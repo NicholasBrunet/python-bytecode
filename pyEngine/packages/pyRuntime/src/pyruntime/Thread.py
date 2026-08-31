@@ -53,7 +53,6 @@ class Thread():
         self._call_stack.append(new_frame)
 
     def step(self) -> ThreadStatus:
-        """Executes a single Instruction. Returns False if halted or completed."""
         if not self._call_stack: raise RuntimeError("Internal Error: VirtualThread should have attribute '_call_stack: list[StackFrame]'")
         if not self.runnable: return self.status
         if self._instruction_pointer >= len(self._program.instructions): 

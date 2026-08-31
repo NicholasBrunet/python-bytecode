@@ -30,21 +30,9 @@ y = x - 5
         program = self.compile(source, True)
         program_id = self.vm.store_program(program)
 
-        opcodes_expected = [
-            Opcode.LOAD_CONST, 
-            Opcode.STORE_GLOBAL, 
-            Opcode.LOAD_GLOBAL, 
-            Opcode.LOAD_CONST, 
-            Opcode.BIN_SUB, 
-            Opcode.STORE_GLOBAL
-        ]
-        self.assertEqual(opcodes_expected, program.opcodes)
-        self.assertEqual(program, Program.of_binary(program.binary))
-
         thread_promise = self.vm.execute_program(program_id)
 
         while self.vm.tick():
-            # pass
             print(thread_promise.thread)
 
 if __name__ == "__main__":

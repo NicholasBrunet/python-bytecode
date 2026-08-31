@@ -74,6 +74,6 @@ class Program:
         output = "["
 
         for instruction in self.instructions:
-            output += f"[{instruction.__str__()}], "
+            output += f"{instruction.__str__()}, "
 
         return output.strip(", ") + "]"

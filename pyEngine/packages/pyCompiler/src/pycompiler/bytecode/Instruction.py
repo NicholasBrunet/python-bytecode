@@ -363,4 +363,4 @@ class Instruction:
         return (self.opcode.value, *self.__to_binary(self.operand))
 
     def __str__(self):
-        return f"'{self.opcode.__str__()}', '{self.operand}'"
+        return f"{self.opcode.__str__()} {self.operand}"
