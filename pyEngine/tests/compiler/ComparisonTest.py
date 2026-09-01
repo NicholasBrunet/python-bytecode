@@ -17,7 +17,7 @@ class ComparisonTest(unittest.TestCase):
         source = """x = 1 == 2"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -33,14 +33,7 @@ class ComparisonTest(unittest.TestCase):
         source = """x = (1 == 2) == 3"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [
-            Opcode.LOAD_CONST, 
-            Opcode.LOAD_CONST, 
-            Opcode.COMPARE_OP, 
-            Opcode.LOAD_CONST, 
-            Opcode.COMPARE_OP, 
-            Opcode.STORE_GLOBAL
-        ]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.LOAD_CONST, Opcode.COMPARE_OP, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}

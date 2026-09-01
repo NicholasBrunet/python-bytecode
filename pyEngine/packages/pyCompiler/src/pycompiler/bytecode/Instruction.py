@@ -45,8 +45,8 @@ class Instruction:
     # ------------------------------------------------------------------
 
     @classmethod
-    def make_function(cls) -> Instruction:
-        return cls(Opcode.MAKE_FUNCTION)
+    def make_function(cls, storage_index: int) -> Instruction:
+        return cls(Opcode.MAKE_FUNCTION, storage_index)
     
     @classmethod
     def call_function(cls) -> Instruction:

@@ -18,7 +18,7 @@ class AssignmentTest(unittest.TestCase):
         source = """x = 5"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -34,7 +34,7 @@ class AssignmentTest(unittest.TestCase):
         source = """x = y = 5"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.DUO_TOP, Opcode.STORE_GLOBAL, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.DUO_TOP, Opcode.STORE_NAME, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 1, "y": 0}

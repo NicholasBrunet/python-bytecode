@@ -1,6 +1,7 @@
 import ast
 from typing import Any
-from ..bytecode.Instruction import Instruction
+from ..bytecode import Instruction
+from .Scope import Scope
 
-def _compile_constant(node: ast.Constant, flags: dict[str, Any]) -> list[Instruction]:
-    return flags["load"](node.value)
+def _compile_constant(node: ast.Constant, scope: Scope) -> list[Instruction]:
+    return scope.load_const(node.value)

@@ -11,11 +11,17 @@ class Opcode(Enum):
 
     # STORAGE OPERATIONS
     LOAD_CONST = auto()
+    """
+    Load constant of value onto the stack
+    """
 
     LOAD_NAME = auto()
+    """
+    Load the value at a given identifier onto the stack
+    """
     STORE_NAME = auto()
     """
-    Store the value at the top of stack with a given identifier \n
+    Store the value at the top of the stack with a given identifier \n
     e.g. "x = 5"
 
     However the bytecode should emit identifiers as storage indexes
@@ -27,8 +33,14 @@ class Opcode(Enum):
 
     # LIFECYCLE OPERATIONS
     MAKE_FUNCTION = auto()
+    """
+    Make a code object for function and store it at a given identifier
+    """
     CALL_FUNCTION = auto()
     RETURN_VALUE = auto()
+    """
+    Return value at the top of the stack
+    """
 
     POP_TOP = auto()
     DUO_TOP = auto()

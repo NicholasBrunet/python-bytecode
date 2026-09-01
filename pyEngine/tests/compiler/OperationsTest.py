@@ -18,7 +18,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 + 3"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -40,7 +40,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.BIN_ADD, 
             Opcode.LOAD_CONST, 
             Opcode.BIN_ADD, 
-            Opcode.STORE_GLOBAL
+            Opcode.STORE_NAME
         ]
         opcodes_generated = program.opcodes
 
@@ -57,7 +57,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 - 3"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -73,7 +73,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 * 3"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_MULT, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_MULT, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -89,7 +89,7 @@ class OperationsTest(unittest.TestCase):
         source = """x = 5 / 3"""
         program = self.compiler.compile(source, True)
 
-        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_DIV, Opcode.STORE_GLOBAL]
+        opcodes_expected = [Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_DIV, Opcode.STORE_NAME]
         opcodes_generated = program.opcodes
 
         globals_expected = {"x": 0}
@@ -111,7 +111,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.LOAD_CONST,  # 8
             Opcode.BIN_MULT,    # 3 * 8
             Opcode.BIN_ADD,     # 5 + (3 * 8)
-            Opcode.STORE_GLOBAL # x
+            Opcode.STORE_NAME # x
         ]
         opcodes_generated = program.opcodes
 
@@ -133,7 +133,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.BIN_ADD,     # 5 + 3
             Opcode.LOAD_CONST,  # 8
             Opcode.BIN_MULT,    # (5 + 3) * 8
-            Opcode.STORE_GLOBAL # x
+            Opcode.STORE_NAME # x
         ]
         opcodes_generated = program.opcodes
 
@@ -157,7 +157,7 @@ class OperationsTest(unittest.TestCase):
             Opcode.LOAD_CONST,  # 3
             Opcode.BIN_MULT,    # 2 * 3
             Opcode.BIN_SUB,     # (12 / 4) - (2 * 3)
-            Opcode.STORE_GLOBAL # x
+            Opcode.STORE_NAME # x
         ]
         opcodes_generated = program.opcodes
 
@@ -176,8 +176,8 @@ y = 10 - 4
 """
         program = self.compiler.compile(source, True)
         opcodes_expected = [
-            Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_GLOBAL, # x = 5 + 2
-            Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_GLOBAL  # y = 10 - 4
+            Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_NAME, # x = 5 + 2
+            Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_NAME  # y = 10 - 4
         ]
         opcodes_generated = program.opcodes
 
@@ -197,8 +197,8 @@ y = xfassfasfasf - 4
         program = self.compiler.compile(source, True)
 
         opcodes_expected = [
-            Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_GLOBAL,
-            Opcode.LOAD_GLOBAL, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_GLOBAL
+            Opcode.LOAD_CONST, Opcode.LOAD_CONST, Opcode.BIN_ADD, Opcode.STORE_NAME,
+            Opcode.LOAD_NAME, Opcode.LOAD_CONST, Opcode.BIN_SUB, Opcode.STORE_NAME
         ]
         opcodes_generated = program.opcodes
 

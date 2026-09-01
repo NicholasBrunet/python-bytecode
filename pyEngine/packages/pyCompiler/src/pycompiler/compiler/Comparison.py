@@ -1,9 +1,10 @@
 import ast
-from typing import Any
+from typing import Any, Callable
 from ..bytecode.Instruction import Instruction
 from .CompilerError import CompilerError
+from .Scope import Scope
 
-def _compile_comparison(node: ast.BinOp, flags: dict[str, Any]) -> list[Instruction]:
+def _compile_comparison(node: ast.Compare, scope: Scope, callback: Callable) -> list[Instruction]:
 
     if len(node.comparators) > 1: 
         raise CompilerError(
@@ -18,8 +19,8 @@ the result of another operation encapsulated by parenthesis.
 
     instructions: list[Instruction] = list()
 
-    instructions.extend(flags["callback"](node.left))
-    instructions.extend(flags["callback"](node.comparators[0]))
-    instructions.extend(flags["callback"](node.ops[0]))
+    instructions.extend(callback(node.left, scope))
+    instructions.extend(callback(node.comparators[0], scope))
+    instructions.extend(callback(node.ops[0], scope))
 
     return instructions

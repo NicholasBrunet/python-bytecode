@@ -10,7 +10,7 @@ from .bytecode import (
 from .compiler import (
     CompilerError, Scope,
     _assign, _import, _name, _constant, _operator, 
-    _bin_op, _compare, _func_def
+    _bin_op, _compare, _func_def, _arg, _return
 )
 
 class Compiler():
@@ -18,13 +18,7 @@ class Compiler():
     def __init__(self):
 
         self._globals: dict[str, str] = {}
-        """
-        Globals passed into module scope, this allows
-        compiler to block certain imports of unauthorized
-        globals.
-        """
-
-        self._scope: Scope = Scope(Scope.Type.MODULE, self._globals)
+        self._scope: Scope | None
 
     def compile(self, source: str, verbose: bool = False):
         
@@ -52,39 +46,28 @@ SyntaxError: {e.msg}
         if verbose: print(ast.dump(tree, indent=4))
 
         instructions: list[Instruction] = list()
+        self._scope = Scope(Scope.Type.MODULE, self._globals, None, verbose)
 
         for statement in tree.body:
             if verbose: print(f"Visiting node: {ast.dump(statement)}")
 
             if statement != None:
-                instructions.extend(self._compile_statement(statement))
-
-        if verbose: print("Globals: " + json.dumps(self._globals, indent=4))
-        if verbose: print("Locals: " + json.dumps(self._locals, indent=4))
-        if verbose: print(f"Instructions: {[instruction.__str__() for instruction in instructions]}")
+                instructions.extend(self._compile_statement(statement, self._scope))
 
         return Program.of(instructions)
 
 
 
-    def _compile_statement(self, statement: ast.stmt) -> list[Instruction]:
+    def _compile_statement(self, statement: ast.stmt, scope: Scope) -> list[Instruction]:
 
         if isinstance(statement, ast.Constant):
-            return _constant(statement, {
-                "load": self._scope.load_constant
-            })
+            return _constant(statement, scope)
     
         elif isinstance(statement, ast.Import | ast.ImportFrom):
-            return _import(statement, {
-                "load": self._scope.load_name,
-                "store": self._scope.store_name,
-            })
+            return _import(statement, scope)
 
         elif isinstance(statement, ast.Name):
-            return _name(statement, {
-                "load": self._scope.load_name,
-                "store": self._scope.store_name,
-            })
+            return _name(statement, scope)
         
         elif isinstance(statement, ast.cmpop):
             return _operator(statement, {
@@ -99,27 +82,24 @@ SyntaxError: {e.msg}
             })
         
         elif isinstance(statement, ast.Assign):
-            return _assign(statement, {
-                "callback": self._compile_statement
-            })
+            return _assign(statement, scope, self._compile_statement)
         
         elif isinstance(statement, ast.BinOp):
-            return _bin_op(statement, {
-                "callback": self._compile_statement
-            })
+            return _bin_op(statement, scope, self._compile_statement)
         
         elif isinstance(statement, ast.Compare):
-            return _compare(statement, {
-                "callback": self._compile_statement
-            })
+            return _compare(statement, scope, self._compile_statement)
         
         elif isinstance(statement, ast.FunctionDef):
-            _function_scope = self._scope.new(Scope.Type.FUNCTION)
-            return _func_def(statement, {
-                "callback": self._compile_statement,
-                "load": _function_scope.load_name,
-                "store": _function_scope.store_name
-            })
+            return _func_def(statement, scope, self._compile_statement)
+
+        elif isinstance(statement, ast.arg):
+            return _arg(statement, scope)
+        
+        elif isinstance(statement, ast.Return):
+            return _return(statement, scope, self._compile_statement)
+        # else:
+        #     return []
 
         else:
             raise CompilerError(f"Could not find compiler operation for: {statement.__class__}")
