@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any
-from .Instruction import Instruction
+from ..bytecode.Instruction import Instruction
 
 @dataclass(frozen=True)
 class CodeObject:

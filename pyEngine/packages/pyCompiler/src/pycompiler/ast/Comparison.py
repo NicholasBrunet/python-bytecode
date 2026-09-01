@@ -1,8 +1,8 @@
 import ast
 from typing import Any, Callable
 from ..bytecode.Instruction import Instruction
-from .CompilerError import CompilerError
-from .Scope import Scope
+from ..compiler.CompilerError import CompilerError
+from ..compiler.Scope import Scope
 
 def _compile_comparison(node: ast.Compare, scope: Scope, callback: Callable) -> list[Instruction]:
 

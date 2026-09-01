@@ -1,7 +1,7 @@
 import ast
 from typing import Any, Callable
 from ..bytecode import Instruction
-from .Scope import Scope
+from ..compiler.Scope import Scope
 
 def _compile_function_def(node: ast.FunctionDef, scope: Scope, callback: Callable) -> list[Instruction]:
 
