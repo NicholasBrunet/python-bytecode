@@ -1,3 +1,4 @@
+import json
 import unittest
 
 from pycompiler import Compiler
@@ -21,8 +22,10 @@ class FunctionTest(unittest.TestCase):
 #     return a + b
 # """
         source = """
-def func(a):
-    return a
+def func(a, b):
+    return a + b
+
+print(func(1, 2))
 """
 #         source = """
 # class func():
@@ -31,7 +34,7 @@ def func(a):
         program = self.compiler.compile(source, True)
 
         print(dis.dis(source))
-        print(program)
+        print(json.dumps([instruction.__str__() for instruction in program.instructions], indent=4))
 
 
 if __name__ == "__main__":

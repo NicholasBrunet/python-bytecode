@@ -2,28 +2,29 @@ from __future__ import annotations
 
 import ast
 import json
+from typing import Any
 
-from .bytecode import (
-    Instruction,
-    Program
-)
-from .compiler import (
-    CompilerError, Scope,
+from .bytecode import Instruction, Program, CodeObject
+from .compiler import CompilerError, Scope
+from .ast import (
     _assign, _import, _name, _constant, _operator, 
-    _bin_op, _compare, _func_def, _arg, _return
+    _bin_op, _compare, _func_def, _arg, _return,
+    _expr, _arguments, _call, _module
 )
 
 class Compiler():
 
     def __init__(self):
 
-        self._globals: dict[str, str] = {}
+        self._globals: dict[str, Any] = {
+            "print": 0
+        }
         self._scope: Scope | None
 
     def compile(self, source: str, verbose: bool = False):
         
         try:
-            tree = ast.parse(source, mode='exec')
+            module = ast.parse(source, mode='exec')
         except SyntaxError as e:
             error_line = e.text.rstrip('\n') if e.text else ""
             
@@ -43,24 +44,20 @@ SyntaxError: {e.msg}
 """)
 
 
-        if verbose: print(ast.dump(tree, indent=4))
-
-        instructions: list[Instruction] = list()
+        if verbose: print(ast.dump(module, indent=4))
         self._scope = Scope(Scope.Type.MODULE, self._globals, None, verbose)
+        instructions: list[Instruction] = self._compile_statement(module, self._scope)
 
-        for statement in tree.body:
-            if verbose: print(f"Visiting node: {ast.dump(statement)}")
-
-            if statement != None:
-                instructions.extend(self._compile_statement(statement, self._scope))
-
-        return Program.of(instructions)
+        return CodeObject.new("module", self._scope.locals, self._scope.globals, instructions)
 
 
 
     def _compile_statement(self, statement: ast.stmt, scope: Scope) -> list[Instruction]:
 
-        if isinstance(statement, ast.Constant):
+        if isinstance(statement, ast.Module):
+            return _module(statement, scope, self._compile_statement)
+        
+        elif isinstance(statement, ast.Constant):
             return _constant(statement, scope)
     
         elif isinstance(statement, ast.Import | ast.ImportFrom):
@@ -70,16 +67,7 @@ SyntaxError: {e.msg}
             return _name(statement, scope)
         
         elif isinstance(statement, ast.cmpop):
-            return _operator(statement, {
-                "comparators": {
-                    ast.Lt: 0,
-                    ast.LtE: 1,
-                    ast.Eq: 2,
-                    ast.NotEq: 3,
-                    ast.Gt: 4,
-                    ast.GtE: 5
-                }
-            })
+            return _operator(statement)
         
         elif isinstance(statement, ast.Assign):
             return _assign(statement, scope, self._compile_statement)
@@ -92,14 +80,21 @@ SyntaxError: {e.msg}
         
         elif isinstance(statement, ast.FunctionDef):
             return _func_def(statement, scope, self._compile_statement)
+        
+        elif isinstance(statement, ast.arguments):
+            return _arguments(statement, scope, self._compile_statement)
 
         elif isinstance(statement, ast.arg):
             return _arg(statement, scope)
         
         elif isinstance(statement, ast.Return):
             return _return(statement, scope, self._compile_statement)
-        # else:
-        #     return []
 
+        elif isinstance(statement, ast.Expr):
+            return _expr(statement, scope, self._compile_statement)
+        
+        elif isinstance(statement, ast.Call):
+            return _call(statement, scope, self._compile_statement)
+        
         else:
             raise CompilerError(f"Could not find compiler operation for: {statement.__class__}")

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from typing import Any, Literal
-from ..bytecode import Instruction, CodeObject, Opcode
+
+from ..bytecode import Instruction, CodeObject
 
 from enum import Enum, auto
 
@@ -14,19 +15,17 @@ class Scope:
         MODULE = auto()
         FUNCTION = auto()
 
-    def __init__(self, scope: Scope.Type, globals: dict[Any, int] = {}, parent_scope: Scope | None = None, verbose: bool = False):
+    def __init__(self, scope: Scope.Type, globals: dict[str, Any] = {}, parent_scope: Scope | None = None, verbose: bool = False):
 
         self._scope: Scope.Type = scope
         self._parent_scope: Scope | None = parent_scope
 
-        self._globals: dict[Any, int] = globals
-        self._locals: dict[Any, int] = {}
-        self._constants: dict[Any, int] = {}
+        # compiler will store identifiers in a dictionary, the vm will read from this dictionary and store in memory
+        self._globals_index: dict[Any, int] = globals
+        self._locals_index: dict[Any, int] = {}
+        self._instructions: list[Instruction] = []
 
         self._verbose: bool = verbose
-
-        self._stack: list[Any] = [] # live stack
-        self._instructions: list[Instruction] = []
 
     def new(self, scope: Scope.Type, verbose: bool = False):
         return self.__class__(scope, self.globals, self, verbose)
@@ -38,10 +37,6 @@ class Scope:
     @property
     def verbose(self) -> bool:
         return self._verbose
-    
-    @property
-    def stack(self) -> list[Any]:
-        return self._stack
     
     @property
     def instructions(self) -> list[Instruction]:
@@ -62,62 +57,47 @@ class Scope:
     
     @property
     def globals(self) -> dict[Any, int]:
-        return self._globals
+        return self._globals_index
     
     @property
     def locals(self) -> dict[Any, int]:
-        return self._locals
+        return self._locals_index
 
-    @property
-    def constants(self) -> dict[Any, int]:
-        return self._constants
-    
     @property
     def storage(self) -> dict[Any, int]:
         if self.type == Scope.Type.MODULE: return self.globals
         elif self.type == Scope.Type.FUNCTION: return self.locals
 
-    def pop_stack(self) -> Any:
-        return self._stack.pop()
-    
-    @property
-    def peak_stack(self) -> Any:
-        return self.stack[-1]
+    def storage_index(self, identifier: Any) -> int:
+        if identifier not in self.storage.keys():
+            self.storage[identifier] = len(self.storage)
 
-    def push_stack(self, value: Any):
-        self._stack.append(value)
+        return self.storage[identifier]
 
     def dump(self) -> str:
-        print(f"'{self.peak_instructions}': {self.stack}")
+        if self.peak_instructions:
+            print(f"'{self.type}' '{self.peak_instructions}'")
     
     # STORAGE OPERATIONS
 
     def load_const(self, value: Any) -> list[Instruction]:
 
-        self.push_stack(value)
         instruction = self.push(Instruction.load_const(value))
     
         if self.verbose: self.dump()
         return [instruction]
 
     def load_name(self, identifier: Any) -> list[Instruction]:
-        if self.verbose: self.dump()
-        self.push_stack(identifier)
-        if identifier not in self.storage.keys():
-            self.storage[identifier] = len(self.storage)
 
-        storage_index = self.storage[identifier]
+        storage_index = self.storage_index(identifier)
         instruction = self.push(Instruction.load_name(storage_index))
 
         if self.verbose: self.dump()
         return [instruction]
 
     def store_name(self, identifier: Any) -> list[Instruction]:
-        self.pop_stack()
-        if identifier not in self.storage.keys():
-            self.storage[identifier] = len(self.storage)
 
-        storage_index = self.storage[identifier]
+        storage_index = self.storage_index(identifier)
         instruction = self.push(Instruction.store_name(storage_index))
 
         if self.verbose: self.dump()
@@ -129,6 +109,7 @@ class Scope:
     # FUNCTION OPERATIONS
 
     def make_function(self, name: str) -> list[Instruction]:
+
         if name not in self.constants.keys():
             self.constants[name] = len(self.constants)
 
@@ -141,7 +122,6 @@ class Scope:
     @property
     def return_value(self) -> list[Instruction]:
 
-        self.pop_stack()
         instruction = self.push(Instruction.return_value())
 
         if self.verbose: self.dump()
@@ -150,10 +130,24 @@ class Scope:
     # LIFECYCLE OPERATIONS
 
     @property
+    def push_null(self) -> list[Instruction]:
+
+        instruction = self.push(Instruction.push_null())
+
+        if self.verbose: self.dump()
+        return [instruction]
+
+    @property
     def duplicate_top(self) -> list[Instruction]:
 
-        self.push_stack(self.peak_stack)
         instruction = self.push(Instruction.duplicate_top())
+
+        if self.verbose: self.dump()
+        return [instruction]
+    
+    def call(self, argument_count: int) -> list[Instruction]:
+
+        instruction = self.push(Instruction.call(argument_count))
 
         if self.verbose: self.dump()
         return [instruction]
@@ -162,9 +156,6 @@ class Scope:
 
     @property
     def binary_add(self) -> Instruction:
-        right = self.pop_stack()
-        left = self.pop_stack()
-        self.push_stack(left + right)
 
         instruction = self.push(Instruction.binary_add())
 
@@ -173,9 +164,6 @@ class Scope:
     
     @property
     def binary_subtract(self) -> Instruction:
-        right = self.pop_stack()
-        left = self.pop_stack()
-        self.push_stack(left - right)
 
         instruction = self.push(Instruction.binary_subtract())
 
@@ -184,10 +172,7 @@ class Scope:
     
     @property
     def binary_multiply(self) -> Instruction:
-        right = self.pop_stack()
-        left = self.pop_stack()
-        self.push_stack(left * right)
-        
+
         instruction = self.push(Instruction.binary_multiply())
 
         if self.verbose: self.dump()
@@ -195,10 +180,7 @@ class Scope:
 
     @property
     def binary_divide(self) -> Instruction:
-        right = self.pop_stack()
-        left = self.pop_stack()
-        self.push_stack(left / right)
-        
+
         instruction = self.push(Instruction.binary_divide())
 
         if self.verbose: self.dump()

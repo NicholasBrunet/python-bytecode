@@ -10,8 +10,12 @@ from .ComparisonOperation import _compile_comparison_operation as _operator
 from .BinaryOperation import _compile_binary_operation as _bin_op
 from .Comparison import _compile_comparison as _compare
 from .FunctionDef import _compile_function_def as _func_def
-from .Argument import _compile_argument as _arg
+from .Arg import _compile_arg as _arg
 from .Return import _compile_return as _return
+from .Expr import _compile_expr as _expr
+from .Arguments import _compile_arguments as _arguments
+from .Call import _compile_call as _call
+from .Module import _compile_module as _module
 
 __all__ = [
     "_assign",
@@ -23,5 +27,9 @@ __all__ = [
     "_compare",
     "_func_def",
     "_arg",
-    "_return"
+    "_return",
+    "_expr",
+    "_arguments",
+    "_call",
+    "_module"
 ]

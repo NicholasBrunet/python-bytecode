@@ -2,5 +2,14 @@ import ast
 from typing import Any
 from ..bytecode.Instruction import Instruction
 
-def _compile_comparison_operation(node: ast.cmpop, flags: dict[str, Any]) -> list[Instruction]:
-    return [Instruction.compare_op(flags["comparators"][node.__class__])]
+comparators = {
+    ast.Lt: 0,
+    ast.LtE: 1,
+    ast.Eq: 2,
+    ast.NotEq: 3,
+    ast.Gt: 4,
+    ast.GtE: 5
+}
+
+def _compile_comparison_operation(node: ast.cmpop) -> list[Instruction]:
+    return [Instruction.compare_op(comparators[node.__class__])]

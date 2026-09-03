@@ -1,7 +1,7 @@
 import ast
 from typing import Any
 from ..bytecode.Instruction import Instruction
-from .Scope import Scope
+from ..compiler.Scope import Scope
 
 def _compile_import(node: ast.Import | ast.ImportFrom, scope: Scope) -> list[Instruction]:
 

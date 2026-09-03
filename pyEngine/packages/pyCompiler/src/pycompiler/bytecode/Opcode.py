@@ -36,12 +36,17 @@ class Opcode(Enum):
     """
     Make a code object for function and store it at a given identifier
     """
-    CALL_FUNCTION = auto()
+    CALL = auto()
+    """
+    Paired with an operand representing the number of arguments to pop from the stack and pass to the function
+    at the top of the stack after
+    """
     RETURN_VALUE = auto()
     """
     Return value at the top of the stack
     """
 
+    PUSH_NULL = auto()
     POP_TOP = auto()
     DUO_TOP = auto()
     SWAP = auto()

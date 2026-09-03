@@ -1,7 +1,7 @@
 import ast
 from typing import Any
 from ..bytecode.Instruction import Instruction
-from .Scope import Scope
+from ..compiler.Scope import Scope
 
 def _compile_name(node: ast.Name, scope: Scope) -> list[Instruction]:
     if isinstance(node.ctx, ast.Store): return scope.store_name(node.id)

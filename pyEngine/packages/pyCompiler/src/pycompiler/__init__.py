@@ -1,10 +1,7 @@
 """
 Primary module for pyCompiler
 """
-from .bytecode import Instruction
-from .bytecode import Opcode
-from .bytecode import Program
-from .code import CodeObject
+from .bytecode import Instruction, Opcode, CodeObject, Program
 from .compiler import Scope
 from .compiler import CompilerError
 

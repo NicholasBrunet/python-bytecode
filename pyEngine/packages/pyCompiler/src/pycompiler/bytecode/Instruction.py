@@ -30,11 +30,9 @@ class Instruction:
     def load_const(cls, value: object) -> Instruction:
         return cls(Opcode.LOAD_CONST, value)
 
-
     @classmethod
     def load_name(cls, storage_index: int) -> Instruction:
         return cls(Opcode.LOAD_NAME, storage_index)
-
 
     @classmethod
     def store_name(cls, storage_index: int) -> Instruction:
@@ -49,12 +47,16 @@ class Instruction:
         return cls(Opcode.MAKE_FUNCTION, storage_index)
     
     @classmethod
-    def call_function(cls) -> Instruction:
-        return cls(Opcode.CALL_FUNCTION)
+    def call(cls, argument_count: int) -> Instruction:
+        return cls(Opcode.CALL, argument_count)
     
     @classmethod
     def return_value(cls) -> Instruction:
         return cls(Opcode.RETURN_VALUE)
+
+    @classmethod
+    def push_null(cls) -> Instruction:
+        return cls(Opcode.PUSH_NULL)
 
     @classmethod
     def pop_top(cls) -> Instruction:
