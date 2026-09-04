@@ -3,13 +3,12 @@ import unittest
 
 from pycompiler import Compiler
 from pycompiler import Opcode
-from pycompiler import Program
 
 import dis
 
 
 
-class FunctionTest(unittest.TestCase):
+class ConditionalsTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.compiler = Compiler()
@@ -17,24 +16,16 @@ class FunctionTest(unittest.TestCase):
 
     def test_assign_comparison(self) -> None:
 
-#         source = """
-# def add(a: int, b: int) -> int:
-#     return a + b
-# """
         source = """
-def func(a, b):
-
-    def func2(a, b):
-        return a + b
-
-    return func2(a, b)
-
-print(func(10, 5))
+a = 3
+b = 4
+if a != b:
+    x = 10
+elif a > b:
+    x = 5
+else:
+    x = 1
 """
-#         source = """
-# class func():
-#     pass
-# """
         code_object = self.compiler.compile(source, True)
         print(code_object.__repr__())
 

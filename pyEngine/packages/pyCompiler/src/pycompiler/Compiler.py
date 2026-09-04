@@ -4,27 +4,26 @@ import ast
 import json
 from typing import Any
 
-from .bytecode import Instruction, Program, CodeObject
+from .bytecode import Instruction, CodeObject
 from .compiler import CompilerError, Scope
 from .ast import (
     _assign, _import, _name, _constant, _operator, 
     _bin_op, _compare, _func_def, _arg, _return,
-    _expr, _arguments, _call, _module
+    _expr, _arguments, _call, _module, _if, _if_exp
 )
 
 class Compiler():
 
     def __init__(self):
 
-        self._globals: dict[str, Any] = {
-            "print": 0
-        }
+        self._globals: dict[str, Any] = {}
+        self._constants: dict[Any, Any] = {}
         self._scope: Scope | None
 
     def compile(self, source: str, verbose: bool = False):
         
         try:
-            module = ast.parse(source, mode='exec')
+            ast_module = ast.parse(source, mode='exec')
         except SyntaxError as e:
             error_line = e.text.rstrip('\n') if e.text else ""
             
@@ -44,11 +43,11 @@ SyntaxError: {e.msg}
 """)
 
 
-        if verbose: print(ast.dump(module, indent=4))
-        self._scope = Scope(Scope.Type.MODULE, self._globals, None, verbose)
-        instructions: list[Instruction] = self._compile_statement(module, self._scope)
+        if verbose: print(ast.dump(ast_module, indent=4))
+        self._scope = Scope(Scope.Type.MODULE, self._globals, self._constants, None, verbose)
+        self._compile_statement(ast_module, self._scope)
 
-        return CodeObject.new("module", self._scope.locals, self._scope.globals, instructions)
+        return self._scope.collapse("module")
 
 
 
@@ -67,7 +66,7 @@ SyntaxError: {e.msg}
             return _name(statement, scope)
         
         elif isinstance(statement, ast.cmpop):
-            return _operator(statement)
+            return _operator(statement, scope)
         
         elif isinstance(statement, ast.Assign):
             return _assign(statement, scope, self._compile_statement)
@@ -95,6 +94,12 @@ SyntaxError: {e.msg}
         
         elif isinstance(statement, ast.Call):
             return _call(statement, scope, self._compile_statement)
+
+        elif isinstance(statement, ast.If):
+            return _if(statement, scope, self._compile_statement)
+
+        elif isinstance(statement, ast.IfExp):
+            return _if_exp(statement, scope, self._compile_statement)
         
         else:
             raise CompilerError(f"Could not find compiler operation for: {statement.__class__}")

@@ -16,35 +16,21 @@ class Opcode(Enum):
     """
 
     LOAD_NAME = auto()
-    """
-    Load the value at a given identifier onto the stack
-    """
     STORE_NAME = auto()
-    """
-    Store the value at the top of the stack with a given identifier \n
-    e.g. "x = 5"
-
-    However the bytecode should emit identifiers as storage indexes
-    """
+    LOAD_FAST = auto()
+    STORE_FAST = auto()
     
     # COMPARISON OPERATIONS
-    COMPARE_OP = auto()  # Operand will represent the type of check (e.g., "==", "<")
+    COMPARE_OP = auto()
 
 
     # LIFECYCLE OPERATIONS
     MAKE_FUNCTION = auto()
-    """
-    Make a code object for function and store it at a given identifier
-    """
-    CALL = auto()
-    """
-    Paired with an operand representing the number of arguments to pop from the stack and pass to the function
-    at the top of the stack after
-    """
     RETURN_VALUE = auto()
-    """
-    Return value at the top of the stack
-    """
+
+    POP_JUMP_IF_FALSE = auto()
+    
+    CALL = auto()
 
     PUSH_NULL = auto()
     POP_TOP = auto()

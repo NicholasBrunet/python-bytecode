@@ -1,5 +1,6 @@
 import ast
-from typing import Any
+
+from ..compiler import Scope
 from ..bytecode.Instruction import Instruction
 
 comparators = {
@@ -11,5 +12,5 @@ comparators = {
     ast.GtE: 5
 }
 
-def _compile_comparison_operation(node: ast.cmpop) -> list[Instruction]:
-    return [Instruction.compare_op(comparators[node.__class__])]
+def _compile_comparison_operation(node: ast.cmpop, scope: Scope) -> list[Instruction]:
+    return scope.compare_op(comparators[node.__class__])

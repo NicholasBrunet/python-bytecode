@@ -16,6 +16,8 @@ from .Expr import _compile_expr as _expr
 from .Arguments import _compile_arguments as _arguments
 from .Call import _compile_call as _call
 from .Module import _compile_module as _module
+from .If import _compile_if as _if
+from .IfExpression import _compile_if_expression as _if_exp
 
 __all__ = [
     "_assign",
@@ -31,5 +33,7 @@ __all__ = [
     "_expr",
     "_arguments",
     "_call",
-    "_module"
+    "_module",
+    "_if",
+    "_if_exp"
 ]
