@@ -13,95 +13,36 @@ import multiprocessing as mp
 import multiprocessing.connection as mpc
 import pypyjit
 import gc
-import array
 import time
-import psutil
 import threading
+import os
+import signal
 
+from .compiler import Compiler
+from .server_constants import (
+    DEFAULT_LOGGING_LEVEL,
+    DEFAULT_WORKER_CLOCK_TICK_SPEED,
+    DEFAULT_ORCHESTRATOR_CLOCK_TICK_SPEED,
+    DEFAULT_WORKER_CORES,
+    DEFAULT_RUNTIMES_PER_WORKER_CORE,
+    MAX_WORKER_CORES,
+    MAX_RUNTIMES_PER_WORKER_CORE,
+    MAX_LOGS
+)
+from .utils import FastArrayLogger
+from .worker import WorkerCore
 
-# DEFAULT_ITERATIONS_TILL_MACHINE_CODE: int = 200
-# DEFAULT_MACHINE_CODE_MEMORY_TIMEOUT: int = 1000
-DEFAULT_LOGGING_LEVEL: int = 2 # 0: off, 1: orchestrator, 2: workers
-DEFAULT_WORKER_CLOCK_TICK_SPEED: int = 0.1
-DEFAULT_ORCHESTRATOR_CLOCK_TICK_SPEED: int = 1
-DEFAULT_WORKER_CORES: int = 1
-DEFAULT_RUNTIMES_PER_WORKER_CORE: int = 5
-MAX_WORKER_CORES: int = mp.cpu_count() - 1
-MAX_RUNTIMES_PER_WORKER_CORE: int = 10
-MAX_LOGS: int = 1000
+import sys
 
-class FastArrayLogger:
-    __slots__ = ["timestamps", "core_ids", "ticks", "memories"]
-    def __init__(self):
-        # 'd' = double float (8 bytes), 'I' = unsigned 32-bit integer (4 bytes)
-        self.timestamps = array.array('d')
-        self.core_ids = array.array('I')
-        self.ticks = array.array('I')
-        self.memories = array.array('d')
+MODULES_TO_STRIP = [
+    'pdb', 'unittest', 'pydoc', 'email', 'http', 'urllib', 
+    'xml', 'distutils', 'ctypes', 'logging'
+]
 
-    def log(self, core_id, clock_tick_count):
-        if len(self.timestamps) >= MAX_LOGS:
-            self.timestamps.pop(0)
-            self.core_ids.pop(0)
-            self.ticks.pop(0)
-            self.memories.pop(0)
+for mod in MODULES_TO_STRIP:
+    if mod in sys.modules:
+        del sys.modules[mod]
 
-        self.timestamps.append(time.time())
-        self.core_ids.append(core_id)
-        self.ticks.append(clock_tick_count)
-        self.memories.append(memory_usage())
-
-    def dump(self):
-        for index in range(len(self.core_ids)):
-            print(self.get_log_string(index))
-
-    def get_log_string(self, index):
-        core_label = "Orchestrator" if self.core_ids[index] == 0 else f"Worker Core #{self.core_ids[index]}"
-        return (f"[{self.timestamps[index]:.4f}] {core_label} | "
-                f"Clock Tick: {self.ticks[index]} | {self.memories[index]:.2f} MB")
-    
-def memory_usage():
-    return psutil.Process().memory_info().rss / 1e6
-
-class WorkerCore:
-    """
-    Controls multiple Virtual Runtimes on one dedicated CPU core
-    """
-
-    __slots__: list[str] = ["worker_id", "worker_connection", "virtual_runtimes", "logger"]
-    def __init__(self, 
-                 worker_id: int,
-                 worker_connection: mpc.Connection,
-                 runtimes: int = DEFAULT_RUNTIMES_PER_WORKER_CORE):
-
-        self.worker_id: int = worker_id
-        self.worker_connection: mpc.Connection = worker_connection
-        self.virtual_runtimes: list = [None] * runtimes
-        self.logger = FastArrayLogger()
-
-    def check_poll(self, value: object) -> bool:
-        if self.worker_connection.poll(): 
-            if self.worker_connection.recv() == value:
-                return True
-        return False
-
-    def start(self):
-        """
-        Begins Worker Core clock
-        """
-        try:
-            clock_tick_count = 0
-            while True:
-                if self.check_poll(0):
-                    if DEFAULT_LOGGING_LEVEL >= 2:
-                        self.logger.dump()
-                    break
-                
-                self.logger.log(self.worker_id + 1, clock_tick_count)
-                time.sleep(DEFAULT_WORKER_CLOCK_TICK_SPEED)
-                clock_tick_count += 1
-        except KeyboardInterrupt:
-            pass
 
 class WorkerConnection:
 
@@ -163,13 +104,23 @@ class Orchestrator:
                     print(f"[Status] Orchestrator Logs Recorded: {len(self.logger.core_ids)}")
                 
                 elif cmd == "logs":
+
+                    print("\n--- Snapshot of Current Worker Logs ---")
+
+                    for worker_connection in self.worker_connections:
+                        worker_process = worker_connection.worker_process
+                        if worker_process and worker_process.is_alive():
+                            os.kill(worker_process.pid, signal.SIGUSR1)
+                        time.sleep(0.1)
+
                     print("\n--- Snapshot of Current Orchestrator Logs ---")
+
                     self.logger.dump()
+
                     print("--------------------------------------------")
                 
                 elif cmd == "exit":
                     print("[Shell] Shutdown requested via CLI.")
-                    import os, signal
                     os.kill(os.getpid(), signal.SIGINT)
                     break
                 else:
@@ -209,9 +160,8 @@ class Orchestrator:
             print("\n[Orchestrator] Initiating system shutdown sequence...")
             for worker_connection in self.worker_connections:
                 worker_process = worker_connection.worker_process
-                orchestrator_connection = worker_connection.orchestrator_connection
                 if worker_process.is_alive():
-                    orchestrator_connection.send(0)
+                    os.kill(worker_process.pid, signal.SIGUSR1)
                     worker_process.join(timeout=1.0)
 
             if DEFAULT_LOGGING_LEVEL >= 1:

@@ -1,0 +1,12 @@
+import multiprocessing as mp
+
+# SERVER
+
+DEFAULT_LOGGING_LEVEL: int = 2 # 0: off, 1: orchestrator, 2: workers
+DEFAULT_WORKER_CLOCK_TICK_SPEED: int = 0.1
+DEFAULT_ORCHESTRATOR_CLOCK_TICK_SPEED: int = 1
+DEFAULT_WORKER_CORES: int = 1
+DEFAULT_RUNTIMES_PER_WORKER_CORE: int = 5
+MAX_WORKER_CORES: int = mp.cpu_count() - 1
+MAX_RUNTIMES_PER_WORKER_CORE: int = 10
+MAX_LOGS: int = 1000
