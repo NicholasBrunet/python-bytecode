@@ -11,8 +11,8 @@ dozen MB of RAM
 """
 import multiprocessing as mp
 import multiprocessing.connection as mpc
-import pypyjit
-import gc
+import pypyjit # type: ignore
+import gc 
 import time
 import threading
 import os
