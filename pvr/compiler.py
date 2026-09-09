@@ -252,7 +252,7 @@ class Compiler:
         for statement in module.body:
             cls.compile_statement(statement, module_scope)
 
-        module_scope.add_instruction(RETURN_VALUE, 0)
+        # module_scope.add_instruction(RETURN_VALUE, 0)
 
         return module_scope.collapse_code(name)
 
