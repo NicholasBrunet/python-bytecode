@@ -1,0 +1,75 @@
+name: pvr-web
+
+services:
+
+  pvr:
+
+    build:
+      context: .
+      dockerfile: pvr/Dockerfile
+    image: pvr:latest
+    container_name: orchestrator
+    restart: unless-stopped
+    networks: 
+      - pvr-net
+    environment:
+      - ALLOWED_CORE_TIME_MILLIES=200000
+      - UNIX_SOCKET_PATH=/tmp/shared_sockets/pvr.sock
+    volumes:
+      - shared-sockets:/tmp/shared_sockets
+
+    cpu_period: 100000
+    cpu_quota: 200000
+    mem_limit: 2048M
+    mem_reservation: 1024M
+
+  backend:
+
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: pvr-backend:latest
+    container_name: backend
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks: 
+      - pvr-net
+    env_file:
+      - backend/.env
+    environment:
+      - ALLOWED_CORE_TIME_MILLIES=100000
+      - UNIX_SOCKET_PATH=/tmp/shared_sockets/pvr.sock
+    volumes:
+      - shared-sockets:/tmp/shared_sockets
+
+    cpu_period: 100000
+    cpu_quota: 100000
+    mem_limit: 1024m
+    mem_reservation: 512m
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: pvr-frontend:latest
+    container_name: frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    env_file:
+      - frontend/.env
+    networks:
+      - pvr-net
+
+    cpu_period: 100000
+    cpu_quota: 100000
+    mem_limit: 1024m
+    mem_reservation: 512m
+
+volumes:
+  shared-sockets:
+
+networks:
+  pvr-net:
+    name: pvr-net

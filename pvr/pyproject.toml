@@ -18,4 +18,4 @@ dependencies = []
 Homepage = "https://github.com/NicholasBrunet/python-bytecode"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]

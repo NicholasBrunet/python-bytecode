@@ -1,0 +1,12 @@
+{
+  "modules": {
+    "math": {
+      "methods": {
+        "sqrt": {
+          "signature": "math.sqrt(x: float | int) -> float",
+          "doc": "Computes the square root of x. Returns an error if x is less than 0."
+        }
+      }
+    }
+  }
+}

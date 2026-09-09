@@ -7,6 +7,10 @@ a code object to be run by a virtual thread
 
 from __future__ import annotations
 
+# -------------------------------------
+# PYTHON BYTECODE INSTRUCTIONS
+# -------------------------------------
+
 # STORAGE OPERATIONS
 
 LOAD_BUILTIN = 0
@@ -47,6 +51,7 @@ BIN_SUB = 20
 BIN_MULT = 21
 BIN_DIV = 22
 
+# -------------------------------------
 
 class CodeObject:
     """

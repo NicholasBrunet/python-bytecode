@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PVR IDE Console Panel</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1e1e1e; color: #d4d4d4; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #workspace { flex: 1; display: flex; overflow: hidden; }
+        #sidebar-explorer { width: 260px; background: #252526; border-right: 1px solid #3c3c3c; display: flex; flex-direction: column; }
+        #main-editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor { flex: 1; overflow: hidden; background: #282c34; position: relative; }
+        .cm-editor { height: 100% !important; }
+        #terminal-panel-hook { height: 200px; min-height: 40px; background: #1e1e1e; border-top: 1px solid #3c3c3c; display: flex; flex-direction: column; }
+        .file-item.active { background: #37373d; color: #fff; }
+        .file-item:hover { background: #2a2d2e; }
+    </style>
+    
+    <!-- 🔒 Step A: Load the security guard loop immediately before parsing view extensions -->
+    <script type="module" src="/client/auth-wrapper.js"></script>
+</head>
+
+<!-- 🔒 Step B: Append the custom protection flag metadata directly into your body tag -->
+<body data-protected="true">
+
+    <div id="workspace">
+        <!-- Components Mount Hooks -->
+        <div id="sidebar-explorer"></div>
+
+        <div id="main-editor-area">
+            <div id="editor"></div>
+            <div id="terminal-panel-hook"></div>
+        </div>
+    </div>
+
+    <div id="status-bar-hook"></div>
+
+    <!-- Main entry points orchestrating view layouts -->
+    <script type="module" src="/client/panels/editor-panel.js"></script>
+</body>
+</html>

@@ -17,6 +17,8 @@ import time
 import threading
 import os
 import signal
+import socket
+import struct
 
 from .compiler import Compiler
 from .server_constants import (
@@ -27,21 +29,12 @@ from .server_constants import (
     DEFAULT_RUNTIMES_PER_WORKER_CORE,
     MAX_WORKER_CORES,
     MAX_RUNTIMES_PER_WORKER_CORE,
-    MAX_LOGS
+    MAX_LOGS,
+    SOCKET_TIMEOUT,
+    UNIX_SOCKET_PATH
 )
 from .utils import FastArrayLogger
 from .worker import WorkerCore
-
-import sys
-
-MODULES_TO_STRIP = [
-    'pdb', 'unittest', 'pydoc', 'email', 'http', 'urllib', 
-    'xml', 'distutils', 'ctypes', 'logging'
-]
-
-for mod in MODULES_TO_STRIP:
-    if mod in sys.modules:
-        del sys.modules[mod]
 
 
 class WorkerConnection:
@@ -59,7 +52,7 @@ class Orchestrator:
     Main handler for distributing worker cores and handling their executions.
     """
 
-    __slots__: list[str] = ["worker_cores", "worker_connections", "runtimes_per_core", "logger"]
+    __slots__: list[str] = ["worker_cores", "worker_connections", "runtimes_per_core", "logger", "shutdown_event"]
     def __init__(self, 
                  worker_cores: int = DEFAULT_WORKER_CORES, 
                  runtimes_per_core: int = DEFAULT_RUNTIMES_PER_WORKER_CORE):
@@ -69,6 +62,7 @@ class Orchestrator:
 
         self.worker_connections: list[WorkerConnection] = [WorkerConnection() for _ in range(worker_cores)]
         self.logger = FastArrayLogger()
+        self.shutdown_event = threading.Event()
 
     def _interactive_shell(self):
         """
@@ -129,6 +123,71 @@ class Orchestrator:
             except (EOFError, KeyboardInterrupt):
                 break
 
+    def _unix_socket_listener_pool(self):
+        """
+        Runs in a background thread to handle raw Unix Domain Socket bytecode packets non-blockingly.
+        Uses explicit message length framing to keep network buffers precise for PyPy.
+        """
+
+        # Unlink/delete the old socket file if it exists from a previous crash
+        if os.path.exists(UNIX_SOCKET_PATH):
+            try:
+                os.unlink(UNIX_SOCKET_PATH)
+            except OSError:
+                pass
+
+        # Create an AF_UNIX socket instead of AF_INET
+        server_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server_socket.bind(UNIX_SOCKET_PATH)
+        server_socket.listen(32)
+        server_socket.settimeout(SOCKET_TIMEOUT)
+        
+        print(f"[Network] UDS Gateway Socket listening on {UNIX_SOCKET_PATH}")
+        
+        is_shutdown = self.shutdown_event.is_set
+        connections = self.worker_connections
+        
+        while not is_shutdown():
+            try:
+                client_sock, addr = server_socket.accept()
+            except socket.timeout:
+                continue
+            except Exception:
+                break
+                
+            t = threading.Thread(
+                target=self._handle_client_stream, 
+                args=(client_sock, connections), 
+                daemon=True
+            )
+            t.start()
+            
+        server_socket.close()
+        # Clean up the file path when the orchestrator shuts down cleanly
+        if os.path.exists(UNIX_SOCKET_PATH):
+            os.unlink(UNIX_SOCKET_PATH)
+
+    def _handle_client_stream(self, client_sock: socket.socket, connections: list[WorkerConnection]):
+        """
+        Maintains connection boundaries, allowing custom payload processing.
+        Sends b"\x01" on successful execution or b"\x00" on stream failure.
+        """
+        client_sock.settimeout(5.0)
+        try:
+            # data = client_sock.recv(4096) # number of bytes
+            client_sock.sendall(b"\x01")
+
+        except Exception as e:
+            try:
+                # TODO Send explicit failure transmission alert if anything breaks
+                client_sock.sendall(b"\x00")
+            except Exception:
+                pass
+        finally:
+            client_sock.close()
+
+
+
     def start(self):
         """
         Registers worker processes and begins main orchestration clock
@@ -145,8 +204,11 @@ class Orchestrator:
             self.worker_connections[worker_core_id].worker_process = worker_process
             self.worker_connections[worker_core_id].orchestrator_connection = orchestrator_connection
 
-        shell_thread = threading.Thread(target=self._interactive_shell, daemon=True)
-        shell_thread.start()
+        # shell_thread = threading.Thread(target=self._interactive_shell, daemon=True)
+        # shell_thread.start()
+
+        network_thread = threading.Thread(target=self._unix_socket_listener_pool, daemon=True)
+        network_thread.start()
 
         try:
             clock_tick_count = 0

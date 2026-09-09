@@ -1,8 +1,8 @@
 import unittest
 import ast
 
-from pvr.compiler import Compiler
-from pvr.code import (
+from pvr.src.compiler import Compiler
+from pvr.src.code import (
     CodeObject,
     LOAD_STR,
     LOAD_INT,

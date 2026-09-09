@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PVR Authorization Gate</title>
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --accent-blue: #007acc;
+            --border-color: #3c3c3c;
+        }
+        body { 
+            margin: 0; 
+            background: var(--bg-dark); 
+            color: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+        }
+        .auth-container {
+            text-align: center;
+            padding: 30px;
+            background: #252526;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .spinner { 
+            border: 4px solid rgba(255,255,255,0.1); 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            border-left-color: var(--accent-blue); 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 20px auto; 
+        }
+        h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #d4d4d4;
+            font-weight: 500;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="spinner"></div>
+        <h3 id="auth-status">Verifying runtime permissions...</h3>
+    </div>
+
+    <!-- 🚪 Dedicated entry script controller -->
+    <script type="module" src="/client/auth-gate.js"></script>
+</body>
+</html>
